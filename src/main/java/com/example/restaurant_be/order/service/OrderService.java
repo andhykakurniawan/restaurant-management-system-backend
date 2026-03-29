@@ -17,6 +17,7 @@ import com.example.restaurant_be.order.repository.OrderRepository;
 import com.example.restaurant_be.user.entity.User;
 import com.example.restaurant_be.user.repository.UserRepository;
 
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 
 @Service
@@ -61,9 +62,16 @@ public class OrderService {
         Order order = orderRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("Order not found"));
 
+        if (order.getStatus() != Status.OPEN &&
+                order.getStatus() != Status.CONFIRMED) {
+
+            throw new IllegalStateException("Order cannot be deleted at this stage");
+        }
+
         orderRepository.delete(order);
     }
 
+    @Transactional
     public OrderResponse restore(UUID id) {
 
         Order order = orderRepository.findByIdIncludingInactive(id)
@@ -73,11 +81,10 @@ public class OrderService {
             throw new IllegalArgumentException("Order already active");
         }
 
-        order.setIsActive(true);
+        orderRepository.restoreById(id);
 
-        Order saved = orderRepository.save(order);
-
-        return toResponse(saved);
+        return toResponse(orderRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Restore failed")));
     }
 
     private OrderResponse toResponse(Order order) {
@@ -97,8 +104,7 @@ public class OrderService {
 
         String prefix = "ORD-" + date;
 
-        Optional<Order> lastOrder =
-                orderRepository.findTopByOrderCodeStartingWithOrderByOrderCodeDesc(prefix);
+        Optional<Order> lastOrder = orderRepository.findTopByOrderCodeStartingWithOrderByOrderCodeDesc(prefix);
 
         int nextNumber = 1;
 
@@ -112,5 +118,92 @@ public class OrderService {
         }
 
         return prefix + "-" + String.format("%04d", nextNumber);
+    }
+
+    @Transactional
+    public OrderResponse confirmOrder(UUID id) {
+
+        Order order = orderRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Order not found"));
+
+        if (order.getStatus() != Status.OPEN) {
+            throw new IllegalStateException("Only OPEN orders can be confirmed");
+        }
+
+        order.setStatus(Status.CONFIRMED);
+
+        Order updatedOrder = orderRepository.save(order);
+
+        return toResponse(updatedOrder);
+    }
+
+    @Transactional
+    public OrderResponse cancelOrder(UUID id) {
+
+        Order order = orderRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Order not found"));
+
+        if (order.getStatus() == Status.CONFIRMED || 
+            order.getStatus() == Status.OPEN ||
+            order.getStatus() == Status.COMPLETED) {
+            throw new IllegalStateException("Order cannot be cancelled at this stage");
+        }
+
+        order.setStatus(Status.CANCELLED);
+
+        Order updatedOrder = orderRepository.save(order);
+
+        return toResponse(updatedOrder);
+    }
+
+    @Transactional
+    public OrderResponse completeOrder(UUID id) {
+
+        Order order = orderRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Order not found"));
+
+        if (order.getStatus() != Status.READY) {
+            throw new IllegalStateException("Only READY orders can be completed");
+        }
+
+        order.setStatus(Status.COMPLETED);
+
+        Order updatedOrder = orderRepository.save(order);
+
+        return toResponse(updatedOrder);
+    }
+
+    @Transactional
+    public OrderResponse preparingOrder(UUID id) {
+
+        Order order = orderRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Order not found"));
+
+        System.out.println("Current status: " + order.getStatus());
+
+        if (order.getStatus() != Status.CONFIRMED) {
+            throw new IllegalStateException("Only CONFIRMED orders can be prepared");
+        }
+
+        order.setStatus(Status.PREPARING);
+
+        return toResponse(orderRepository.save(order));
+    }
+
+    @Transactional
+    public OrderResponse readyOrder(UUID id) {
+
+        Order order = orderRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Order not found"));
+
+        if (order.getStatus() != Status.PREPARING) {
+            throw new IllegalStateException("Only PREPARING orders can be marked as ready");
+        }
+
+        order.setStatus(Status.READY);
+
+        Order updatedOrder = orderRepository.save(order);
+
+        return toResponse(updatedOrder);
     }
 }

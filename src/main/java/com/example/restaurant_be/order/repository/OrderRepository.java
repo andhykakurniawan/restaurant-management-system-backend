@@ -1,6 +1,7 @@
 package com.example.restaurant_be.order.repository;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 
 import com.example.restaurant_be.order.entity.Order;
@@ -13,6 +14,10 @@ public interface OrderRepository extends JpaRepository<Order, UUID> {
 
     @Query(value = "SELECT * FROM orders WHERE id = :id", nativeQuery = true)
     Optional<Order> findByIdIncludingInactive(UUID id);
+
+    @Modifying
+    @Query(value = "UPDATE orders SET is_active = true WHERE id = :id", nativeQuery = true)
+    void restoreById(UUID id);
 
     Optional<Order> findTopByOrderCodeStartingWithOrderByOrderCodeDesc(String prefix);
 }

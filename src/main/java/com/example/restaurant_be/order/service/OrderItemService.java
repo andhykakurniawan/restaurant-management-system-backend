@@ -13,6 +13,7 @@ import com.example.restaurant_be.order.dto.OrderItemRequest;
 import com.example.restaurant_be.order.dto.OrderItemResponse;
 import com.example.restaurant_be.order.entity.Order;
 import com.example.restaurant_be.order.entity.OrderItem;
+import com.example.restaurant_be.order.entity.Status;
 import com.example.restaurant_be.order.repository.OrderItemRepository;
 import com.example.restaurant_be.order.repository.OrderRepository;
 
@@ -21,128 +22,142 @@ import lombok.RequiredArgsConstructor;
 @Service
 @RequiredArgsConstructor
 public class OrderItemService {
-    private final OrderItemRepository orderItemRepository;
-    private final OrderRepository orderRepository;
-    private final MenuRepository menuRepository;
+        private final OrderItemRepository orderItemRepository;
+        private final OrderRepository orderRepository;
+        private final MenuRepository menuRepository;
 
-    public List<OrderItemResponse> findAll(UUID orderId) {
+        public List<OrderItemResponse> findAll(UUID orderId) {
 
-        orderRepository.findById(orderId)
-                .orElseThrow(() -> new IllegalArgumentException("Order not found"));
+                orderRepository.findById(orderId)
+                                .orElseThrow(() -> new IllegalArgumentException("Order not found"));
 
-        return orderItemRepository.findByOrder_Id(orderId)
-                .stream()
-                .map(this::toResponse)
-                .toList();
-    }
-
-    public OrderItemResponse create(UUID orderId, OrderItemRequest request) {
-
-        Order order = orderRepository.findById(orderId)
-                .orElseThrow(() -> new IllegalArgumentException("Order not found"));
-
-        Menu menu = menuRepository.findById(request.menuId())
-                .orElseThrow(() -> new IllegalArgumentException("Menu not found"));
-
-        BigDecimal price = menu.getPrice();
-
-        Optional<OrderItem> existingItem = orderItemRepository.findByOrder_IdAndMenu_Id(orderId, request.menuId());
-
-        OrderItem item;
-
-        if (existingItem.isPresent()) {
-
-            item = existingItem.get();
-
-            int newQty = item.getQuantity() + request.quantity();
-
-            BigDecimal newSubtotal = price.multiply(BigDecimal.valueOf(newQty));
-
-            item.setQuantity(newQty);
-            item.setSubTotal(newSubtotal);
-
-        } else {
-
-            item = new OrderItem();
-
-            item.setOrder(order);
-            item.setMenu(menu);
-            item.setQuantity(request.quantity());
-            item.setPriceSnapshot(price);
-
-            BigDecimal subtotal = price.multiply(BigDecimal.valueOf(request.quantity()));
-
-            item.setSubTotal(subtotal);
+                return orderItemRepository.findByOrder_Id(orderId)
+                                .stream()
+                                .map(this::toResponse)
+                                .toList();
         }
 
-        OrderItem saved = orderItemRepository.save(item);
+        private void validateOrderEditable(Order order) {
 
-        recalcOrderTotal(order);
+                if (order.getStatus() != Status.OPEN) {
+                        throw new IllegalStateException("Order already locked");
+                }
+        }
 
-        return toResponse(saved);
-    }
+        public OrderItemResponse create(UUID orderId, OrderItemRequest request) {
 
-    private void recalcOrderTotal(Order order) {
+                Order order = orderRepository.findById(orderId)
+                                .orElseThrow(() -> new IllegalArgumentException("Order not found"));
 
-        List<OrderItem> items = orderItemRepository.findByOrder_Id(order.getId());
+                validateOrderEditable(order);
 
-        BigDecimal total = items.stream()
-                .map(OrderItem::getSubTotal)
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
+                Menu menu = menuRepository.findById(request.menuId())
+                                .orElseThrow(() -> new IllegalArgumentException("Menu not found"));
 
-        order.setTotalAmount(total);
+                BigDecimal price = menu.getPrice();
 
-        orderRepository.save(order);
-    }
+                Optional<OrderItem> existingItem = orderItemRepository.findByOrder_IdAndMenu_Id(orderId,
+                                request.menuId());
 
-    public OrderItemResponse update(UUID orderId, UUID itemId, OrderItemRequest request) {
+                OrderItem item;
 
-        OrderItem item = orderItemRepository.findById(itemId)
-                .orElseThrow(() -> new IllegalArgumentException("Item not found"));
+                if (existingItem.isPresent()) {
 
-        BigDecimal price = item.getPriceSnapshot();
+                        item = existingItem.get();
 
-        BigDecimal newSubtotal = price.multiply(BigDecimal.valueOf(request.quantity()));
+                        int newQty = item.getQuantity() + request.quantity();
 
-        Order order = item.getOrder();
+                        BigDecimal newSubtotal = price.multiply(BigDecimal.valueOf(newQty));
 
-        order.setTotalAmount(
-                order.getTotalAmount()
-                        .subtract(item.getSubTotal())
-                        .add(newSubtotal));
+                        item.setQuantity(newQty);
+                        item.setSubTotal(newSubtotal);
 
-        item.setQuantity(request.quantity());
-        item.setSubTotal(newSubtotal);
+                } else {
 
-        orderRepository.save(order);
-        OrderItem saved = orderItemRepository.save(item);
+                        item = new OrderItem();
 
-        return toResponse(saved);
-    }
+                        item.setOrder(order);
+                        item.setMenu(menu);
+                        item.setQuantity(request.quantity());
+                        item.setPriceSnapshot(price);
 
-    public void delete(UUID orderId, UUID itemId) {
+                        BigDecimal subtotal = price.multiply(BigDecimal.valueOf(request.quantity()));
 
-        OrderItem item = orderItemRepository.findById(itemId)
-                .orElseThrow(() -> new IllegalArgumentException("Item not found"));
+                        item.setSubTotal(subtotal);
+                }
 
-        Order order = item.getOrder();
+                OrderItem saved = orderItemRepository.save(item);
 
-        order.setTotalAmount(
-                order.getTotalAmount().subtract(item.getSubTotal()));
+                recalcOrderTotal(order);
 
-        orderRepository.save(order);
+                return toResponse(saved);
+        }
 
-        orderItemRepository.delete(item);
-    }
+        private void recalcOrderTotal(Order order) {
 
-    private OrderItemResponse toResponse(OrderItem orderItem) {
-        return new OrderItemResponse(
-                orderItem.getId(),
-                orderItem.getMenu().getId(),
-                orderItem.getMenu().getName(),
-                orderItem.getQuantity(),
-                orderItem.getPriceSnapshot(),
-                orderItem.getSubTotal());
-    }
+                List<OrderItem> items = orderItemRepository.findByOrder_Id(order.getId());
+
+                BigDecimal total = items.stream()
+                                .map(OrderItem::getSubTotal)
+                                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+                order.setTotalAmount(total);
+
+                orderRepository.save(order);
+        }
+
+        public OrderItemResponse update(UUID orderId, UUID itemId, OrderItemRequest request) {
+
+                OrderItem item = orderItemRepository.findById(itemId)
+                                .orElseThrow(() -> new IllegalArgumentException("Item not found"));
+
+                BigDecimal price = item.getPriceSnapshot();
+
+                BigDecimal newSubtotal = price.multiply(BigDecimal.valueOf(request.quantity()));
+
+                Order order = item.getOrder();
+
+                validateOrderEditable(order);
+
+                order.setTotalAmount(
+                                order.getTotalAmount()
+                                                .subtract(item.getSubTotal())
+                                                .add(newSubtotal));
+
+                item.setQuantity(request.quantity());
+                item.setSubTotal(newSubtotal);
+
+                orderRepository.save(order);
+                OrderItem saved = orderItemRepository.save(item);
+
+                return toResponse(saved);
+        }
+
+        public void delete(UUID orderId, UUID itemId) {
+
+                OrderItem item = orderItemRepository.findById(itemId)
+                                .orElseThrow(() -> new IllegalArgumentException("Item not found"));
+
+                Order order = item.getOrder();
+
+                order.setTotalAmount(
+                                order.getTotalAmount().subtract(item.getSubTotal()));
+
+                validateOrderEditable(order);
+                
+                orderRepository.save(order);
+
+                orderItemRepository.delete(item);
+        }
+
+        private OrderItemResponse toResponse(OrderItem orderItem) {
+                return new OrderItemResponse(
+                                orderItem.getId(),
+                                orderItem.getMenu().getId(),
+                                orderItem.getMenu().getName(),
+                                orderItem.getQuantity(),
+                                orderItem.getPriceSnapshot(),
+                                orderItem.getSubTotal());
+        }
 
 }

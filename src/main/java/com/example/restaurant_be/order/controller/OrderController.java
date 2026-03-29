@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.UUID;
 
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import com.example.restaurant_be.order.dto.OrderRequest;
@@ -43,5 +44,35 @@ public class OrderController {
     @PatchMapping("/{id}/restore")
     public ResponseEntity<OrderResponse> restore(@PathVariable UUID id) {
         return ResponseEntity.ok(orderService.restore(id));
+    }
+
+    @PatchMapping("/{id}/confirm")
+    @PreAuthorize("hasRole('ROLE_SUPER_ADMIN') or hasRole('ROLE_WAITER')")
+    public ResponseEntity<OrderResponse> confirm(@PathVariable UUID id) {
+        return ResponseEntity.ok(orderService.confirmOrder(id));
+    }
+
+    @PatchMapping("/{id}/cancel")
+    @PreAuthorize("hasRole('ROLE_SUPER_ADMIN') or hasRole('ROLE_WAITER')")
+    public ResponseEntity<OrderResponse> cancel(@PathVariable UUID id) {
+        return ResponseEntity.ok(orderService.cancelOrder(id));
+    }
+
+    @PatchMapping("/{id}/complete")
+    @PreAuthorize("hasRole('ROLE_SUPER_ADMIN') or hasRole('ROLE_WAITER')")
+    public ResponseEntity<OrderResponse> complete(@PathVariable UUID id) {
+        return ResponseEntity.ok(orderService.completeOrder(id));
+    }
+
+    @PatchMapping("/{id}/preparing")
+    @PreAuthorize("hasRole('ROLE_SUPER_ADMIN') or hasRole('ROLE_CHEF')")
+    public ResponseEntity<OrderResponse> prepare(@PathVariable UUID id) {
+        return ResponseEntity.ok(orderService.preparingOrder(id));
+    }
+
+    @PatchMapping("/{id}/ready")
+    @PreAuthorize("hasRole('ROLE_SUPER_ADMIN') or hasRole('ROLE_CHEF')")
+    public ResponseEntity<OrderResponse> ready(@PathVariable UUID id) {
+        return ResponseEntity.ok(orderService.readyOrder(id));
     }
 }
