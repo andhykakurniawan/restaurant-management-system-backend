@@ -6,5 +6,6 @@ public enum Status {
     PREPARING,
     READY,
     COMPLETED,
-    CANCELLED
+    CANCELLED,
+    PAID
 }
