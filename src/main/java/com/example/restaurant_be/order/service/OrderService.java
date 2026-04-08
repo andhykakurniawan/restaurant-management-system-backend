@@ -162,8 +162,8 @@ public class OrderService {
         Order order = orderRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Order not found"));
 
-        if (order.getStatus() != Status.READY) {
-            throw new IllegalStateException("Only READY orders can be completed");
+        if (order.getStatus() != Status.SERVED) {
+            throw new IllegalStateException("Only SERVED orders can be completed");
         }
 
         order.setStatus(Status.COMPLETED);
@@ -201,6 +201,23 @@ public class OrderService {
         }
 
         order.setStatus(Status.READY);
+
+        Order updatedOrder = orderRepository.save(order);
+
+        return toResponse(updatedOrder);
+    }
+
+    @Transactional
+    public OrderResponse servedOrder(UUID id) {
+
+        Order order = orderRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Order not found"));
+
+        if (order.getStatus() != Status.READY) {
+            throw new IllegalStateException("Only READY orders can be marked as served");
+        }
+
+        order.setStatus(Status.SERVED);
 
         Order updatedOrder = orderRepository.save(order);
 

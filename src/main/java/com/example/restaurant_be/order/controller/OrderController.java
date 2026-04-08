@@ -75,4 +75,10 @@ public class OrderController {
     public ResponseEntity<OrderResponse> ready(@PathVariable UUID id) {
         return ResponseEntity.ok(orderService.readyOrder(id));
     }
+
+    @PatchMapping("/{id}/served")
+    @PreAuthorize("hasRole('ROLE_SUPER_ADMIN') or hasRole('ROLE_WAITER')")
+    public ResponseEntity<OrderResponse> served(@PathVariable UUID id) {
+        return ResponseEntity.ok(orderService.servedOrder(id));
+    }
 }
