@@ -31,6 +31,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/menu-ingredients/**").permitAll()
                         .requestMatchers("/api/orders/**").permitAll()
                         .requestMatchers("/api/payments/**").permitAll()
+                        .requestMatchers("/api/reports/**").permitAll()
                         // .requestMatchers("/api/admin/**").hasAuthority("ROLE_SUPER_ADMIN")
                         .anyRequest().authenticated())
 
