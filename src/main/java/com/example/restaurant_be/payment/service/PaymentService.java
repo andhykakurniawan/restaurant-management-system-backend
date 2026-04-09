@@ -56,7 +56,7 @@ public class PaymentService {
             throw new IllegalStateException("Total order tidak valid");
         }
 
-        if (order.getStatus() != Status.READY) {
+        if (order.getStatus() != Status.SERVED) {
             throw new IllegalStateException("Order belum siap dibayar");
         }
 
