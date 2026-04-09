@@ -1,6 +1,5 @@
 package com.example.restaurant_be.menuingredient.dto;
 
-import java.math.BigDecimal;
 import java.util.UUID;
 
 public record MenuIngredientResponse(
@@ -9,6 +8,6 @@ public record MenuIngredientResponse(
         String menuName,
         UUID ingredientId,
         String ingredientName,
-        BigDecimal quantity,
+        Integer quantity,
         boolean is_active
 ) {}
