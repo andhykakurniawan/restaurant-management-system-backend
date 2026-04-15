@@ -19,7 +19,7 @@ public class IngredientService {
     private final IngredientRepository ingredientRepository;
 
     public List<IngredientResponse> findAll() {
-        return ingredientRepository.findAll()
+        return ingredientRepository.findAllIncludingInactive()
                 .stream()
                 .map(this::toResponse)
                 .toList();

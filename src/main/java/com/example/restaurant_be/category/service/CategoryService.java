@@ -4,7 +4,6 @@ import java.util.List;
 import java.util.UUID;
 
 import org.springframework.stereotype.Service;
-
 import com.example.restaurant_be.category.dto.CategoryRequest;
 import com.example.restaurant_be.category.dto.CategoryResponse;
 import com.example.restaurant_be.category.entity.Category;
@@ -18,7 +17,7 @@ public class CategoryService {
     private final CategoryRepository categoryRepository;
 
     public List<CategoryResponse> findAll() {
-        return categoryRepository.findAll()
+        return categoryRepository.findAllIncludingInactive()
                 .stream()
                 .map(this::toResponse)
                 .toList();

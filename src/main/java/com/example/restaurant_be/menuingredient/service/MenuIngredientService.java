@@ -23,7 +23,7 @@ public class MenuIngredientService {
     private final IngredientRepository ingredientRepository;
 
     public List<MenuIngredientResponse> findAll() {
-        return menuIngredientRepository.findAll()
+        return menuIngredientRepository.findAllIncludingInactive()
                 .stream()
                 .map(this::toResponse)
                 .toList();

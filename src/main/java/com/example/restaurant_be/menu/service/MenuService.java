@@ -20,7 +20,7 @@ public class MenuService {
     private final CategoryRepository categoryRepository;
 
     public List<MenuResponse> findAll() {
-        return menuRepository.findAll()
+        return menuRepository.findAllIncludingInactive()
                 .stream()
                 .map(this::toResponse)
                 .toList();
