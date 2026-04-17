@@ -65,6 +65,13 @@ public class MenuIngredientService {
         return toResponse(menuIngredient);
     }
 
+    public List<MenuIngredientResponse> findByMenuId(UUID menuId) {
+        return menuIngredientRepository.findByMenuIdIncludingInactive(menuId)
+                .stream()
+                .map(this::toResponse)
+                .toList();
+    }
+
     public void deleteById(UUID id) {
         if (!menuIngredientRepository.existsById(id)) {
             throw new IllegalArgumentException("MenuIngredient not found");

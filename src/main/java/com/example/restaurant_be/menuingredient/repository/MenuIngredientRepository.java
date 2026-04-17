@@ -12,6 +12,9 @@ public interface MenuIngredientRepository extends JpaRepository<MenuIngredient, 
     @Query(value = "select * from menu_ingredients where id = :id", nativeQuery = true)
     Optional<MenuIngredient> findByIdIncludingInactive(UUID id);
 
+    @Query(value = "select * from menu_ingredients where menu_id = :menuId", nativeQuery = true)
+    List<MenuIngredient> findByMenuIdIncludingInactive(UUID menuId);
+
     @Query(value = "select * from menu_ingredients", nativeQuery = true)
     List<MenuIngredient> findAllIncludingInactive();
 }
