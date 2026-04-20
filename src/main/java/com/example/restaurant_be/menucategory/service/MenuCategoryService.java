@@ -1,8 +1,9 @@
 package com.example.restaurant_be.menucategory.service;
 
+import java.math.BigDecimal;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
-
 import org.springframework.stereotype.Service;
 
 import com.example.restaurant_be.category.entity.Category;
@@ -78,6 +79,20 @@ public class MenuCategoryService {
                 .stream()
                 .map(this::toResponse)
                 .toList();
+    }
+
+    public MenuCategoryResponse updatePartial(UUID id, Map<String, Object> updates) {
+
+        MenuCategory entity = menuCategoryRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("Data not found"));
+
+        if (updates.containsKey("price")) {
+            BigDecimal price = new BigDecimal(updates.get("price").toString());
+            entity.setPrice(price);
+        }
+
+        MenuCategory saved = menuCategoryRepository.save(entity);
+        return toResponse(saved);
     }
 
     public void deleteById(UUID id) {
