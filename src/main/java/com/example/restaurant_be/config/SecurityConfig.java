@@ -38,7 +38,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/payments/**").permitAll()
                         .requestMatchers("/api/reports/**").permitAll()
                         .requestMatchers("/api/shifts/**").permitAll()
-                        .requestMatchers("/api/attendances/**").permitAll()
+                        .requestMatchers("/api/attendances/**").authenticated()
                         // .requestMatchers("/api/admin/**").hasAuthority("ROLE_SUPER_ADMIN")
                         .anyRequest().authenticated())
 
