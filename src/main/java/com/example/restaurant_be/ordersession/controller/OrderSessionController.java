@@ -1,0 +1,52 @@
+package com.example.restaurant_be.ordersession.controller;
+
+import java.util.UUID;
+
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.PatchMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import com.example.restaurant_be.common.response.ApiResponse;
+import com.example.restaurant_be.ordersession.dto.OrderSessionRequest;
+import com.example.restaurant_be.ordersession.dto.OrderSessionResponse;
+import com.example.restaurant_be.ordersession.service.OrderSessionService;
+
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
+
+@RestController
+@RequestMapping("/api/order-sessions")
+@RequiredArgsConstructor
+public class OrderSessionController {
+
+    private final OrderSessionService orderSessionService;
+
+    @PostMapping
+    @PreAuthorize("hasRole('ROLE_SUPER_ADMIN') or hasRole('ROLE_WAITER')")
+    public ResponseEntity<ApiResponse<OrderSessionResponse>> createSession(
+            @Valid @RequestBody OrderSessionRequest request) {
+
+        OrderSessionResponse response = orderSessionService.createSession(request);
+
+        return ResponseEntity.ok(
+                ApiResponse.success(
+                        "Order session created successfully",
+                        response));
+    }
+
+    @PatchMapping("/{id}/close")
+    @PreAuthorize("hasRole('ROLE_SUPER_ADMIN') or hasRole('ROLE_WAITER')")
+    public ResponseEntity<ApiResponse<UUID>> closeSession(@PathVariable("id") UUID id) {
+        orderSessionService.closeSession(id);
+
+        return ResponseEntity.ok(
+                ApiResponse.success(
+                        "Order session closed successfully",
+                        null));
+    }
+}
