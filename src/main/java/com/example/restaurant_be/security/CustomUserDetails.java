@@ -1,11 +1,13 @@
 package com.example.restaurant_be.security;
 
-import com.example.restaurant_be.user.entity.User;
-import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.GrantedAuthority;
-
 import java.util.Collection;
-import java.util.Collections;
+import java.util.List;
+
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.userdetails.UserDetails;
+
+import com.example.restaurant_be.user.entity.User;
 
 public class CustomUserDetails implements UserDetails {
 
@@ -21,7 +23,10 @@ public class CustomUserDetails implements UserDetails {
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        return Collections.emptyList(); // nanti bisa role mapping di sini
+
+        return List.of(
+                new SimpleGrantedAuthority(
+                        "ROLE_" + user.getRole().name()));
     }
 
     @Override
