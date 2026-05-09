@@ -73,4 +73,13 @@ public class AttendanceController {
                         "Today's attendances retrieved successfully",
                         attendanceService.findToday()));
     }
+
+    @GetMapping
+    public ResponseEntity<ApiResponse<List<AttendanceResponse>>> findAll() {
+
+        return ResponseEntity.ok(
+                ApiResponse.success(
+                        "All attendances retrieved successfully",
+                        attendanceService.findAll()));
+    }
 }

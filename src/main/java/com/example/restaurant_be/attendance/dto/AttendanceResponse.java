@@ -10,6 +10,7 @@ public record AttendanceResponse(
         String userName,
         UUID shiftId,
         String shiftName,
+        String attendanceDate,
         String clockIn,
         String clockOut,
         Status status,

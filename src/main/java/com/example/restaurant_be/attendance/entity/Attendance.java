@@ -10,13 +10,7 @@ import com.example.restaurant_be.common.base.BaseEntity;
 import com.example.restaurant_be.shift.entity.Shift;
 import com.example.restaurant_be.user.entity.User;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;

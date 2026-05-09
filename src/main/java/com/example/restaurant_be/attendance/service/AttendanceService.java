@@ -117,6 +117,14 @@ public class AttendanceService {
                 .toList();
     }
 
+    public List<AttendanceResponse> findAll() {
+
+        return attendanceRepository.findAllIncludingInactive()
+                .stream()
+                .map(this::toResponse)
+                .toList();
+    }
+
     private AttendanceResponse toResponse(Attendance attendance) {
 
         return new AttendanceResponse(
@@ -125,6 +133,7 @@ public class AttendanceService {
                 attendance.getUser().getUsername(),
                 attendance.getShift().getId(),
                 attendance.getShift().getShiftName(),
+                attendance.getAttendanceDate().toString(),
                 attendance.getClockIn() != null ? attendance.getClockIn().toString() : null,
                 attendance.getClockOut() != null ? attendance.getClockOut().toString() : null,
                 attendance.getStatus(),
