@@ -22,3 +22,6 @@ server:
 jwt:
   secret: thisIsVerySecretKeyForJwtDontUseThisInProduction
   expiration: 3600000
+
+app:
+  frontend-url: http://192.168.1.10:5173
