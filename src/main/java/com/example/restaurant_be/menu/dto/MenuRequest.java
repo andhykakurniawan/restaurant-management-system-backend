@@ -23,7 +23,7 @@ public record MenuRequest(
         String imageUrl,
 
         @NotNull
-        boolean isAvailable,
+        Boolean isAvailable,
 
         @NotNull
         UUID categoryId

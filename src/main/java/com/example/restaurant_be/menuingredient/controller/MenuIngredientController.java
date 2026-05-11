@@ -50,6 +50,14 @@ public class MenuIngredientController {
                         menuIngredientService.findById(id)));
     }
 
+    @GetMapping("/menu/{menuId}")
+    public ResponseEntity<ApiResponse<List<MenuIngredientResponse>>> findByMenuId(@PathVariable UUID menuId) {
+        return ResponseEntity.ok(
+                ApiResponse.success(
+                        "Menu Ingredients retrieved successfully",
+                        menuIngredientService.findByMenuId(menuId)));
+    }
+
     @DeleteMapping("/{id}")
     public ResponseEntity<ApiResponse<Void>> deleteById(@PathVariable UUID id) {
         menuIngredientService.deleteById(id);

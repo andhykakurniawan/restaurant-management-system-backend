@@ -23,7 +23,7 @@ public class MenuIngredientService {
     private final IngredientRepository ingredientRepository;
 
     public List<MenuIngredientResponse> findAll() {
-        return menuIngredientRepository.findAll()
+        return menuIngredientRepository.findAllIncludingInactive()
                 .stream()
                 .map(this::toResponse)
                 .toList();
@@ -63,6 +63,13 @@ public class MenuIngredientService {
                 .orElseThrow(() -> new IllegalArgumentException("MenuIngredient not found"));
 
         return toResponse(menuIngredient);
+    }
+
+    public List<MenuIngredientResponse> findByMenuId(UUID menuId) {
+        return menuIngredientRepository.findByMenuIdIncludingInactive(menuId)
+                .stream()
+                .map(this::toResponse)
+                .toList();
     }
 
     public void deleteById(UUID id) {

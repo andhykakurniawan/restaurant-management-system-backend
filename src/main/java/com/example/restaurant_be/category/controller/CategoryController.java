@@ -69,5 +69,4 @@ public class CategoryController {
                 return ResponseEntity.ok(
                                 ApiResponse.success("Category restored successfully", response));
         }
-
 }

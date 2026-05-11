@@ -21,7 +21,7 @@ public class UserService {
     private final PasswordEncoder passwordEncoder;
 
     public List<UserResponse> findAll() {
-        return userRepository.findAll()
+        return userRepository.findAllIncludingInactive()
                 .stream()
                 .map(this::toResponse)
                 .toList();

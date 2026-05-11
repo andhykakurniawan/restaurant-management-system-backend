@@ -1,7 +1,5 @@
 package com.example.restaurant_be.menuingredient.entity;
 
-import java.math.BigDecimal;
-
 import org.hibernate.annotations.SQLDelete;
 import org.hibernate.annotations.SQLRestriction;
 
@@ -33,6 +31,6 @@ public class MenuIngredient extends BaseEntity {
     private Ingredients ingredient;
 
     @Column(nullable = false)
-    private BigDecimal quantity;
+    private Integer quantity;
     
 }
