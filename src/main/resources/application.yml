@@ -1,4 +1,7 @@
 spring:
+  profiles:
+    active: dev
+
   datasource:
     url: jdbc:postgresql://localhost:5432/restaurant_db
     username: postgres
@@ -7,7 +10,9 @@ spring:
   jpa:
     hibernate:
       ddl-auto: update
+
     show-sql: true
+
     properties:
       hibernate:
         format_sql: true
@@ -25,8 +30,3 @@ jwt:
 
 app:
   frontend-url: http://192.168.1.10:5173
-
-midtrans:
-  server-key: ${MIDTRANS_SERVER_KEY}
-  client-key: ${MIDTRANS_CLIENT_KEY}
-  is-production: false

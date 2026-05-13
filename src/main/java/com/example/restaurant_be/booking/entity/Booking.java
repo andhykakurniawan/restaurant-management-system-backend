@@ -2,6 +2,7 @@ package com.example.restaurant_be.booking.entity;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.LocalTime;
 
 import org.hibernate.annotations.SQLDelete;
@@ -20,8 +21,8 @@ import lombok.Setter;
 @SQLRestriction("is_active = true")
 @Getter
 @Setter
-public class Booking extends BaseEntity{
-    
+public class Booking extends BaseEntity {
+
     @Column(nullable = false)
     private String customerName;
 
@@ -32,8 +33,8 @@ public class Booking extends BaseEntity{
     private Integer numberPerson;
 
     @JoinColumn(name = "table_id", nullable = false)
-    @ManyToOne (fetch = FetchType.LAZY)
-    private TableRestaurant table; 
+    @ManyToOne(fetch = FetchType.LAZY)
+    private TableRestaurant table;
 
     @Column(nullable = false)
     private LocalDate bookingDate;
@@ -58,4 +59,11 @@ public class Booking extends BaseEntity{
 
     @Column(nullable = false)
     private boolean hasPreorder = false;
+
+    @Column(nullable = false)
+    private LocalDateTime expiredAt;
+
+    private LocalDateTime paidAt;
+
+    private LocalDateTime cancelledAt;
 }

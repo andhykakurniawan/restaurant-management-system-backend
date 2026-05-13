@@ -10,6 +10,8 @@ public record OrderSessionResponse(
     String tableNumber,
     UUID createdBy,
     String userName,
+    UUID bookingId,
+    String bookingCode,
     String sessionToken,
     String sessionUrl,
     String qrCode,
