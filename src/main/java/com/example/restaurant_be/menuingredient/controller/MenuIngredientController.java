@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -17,6 +18,7 @@ import com.example.restaurant_be.common.response.ApiResponse;
 import com.example.restaurant_be.menuingredient.dto.MenuIngredientRequest;
 import com.example.restaurant_be.menuingredient.dto.MenuIngredientResponse;
 import com.example.restaurant_be.menuingredient.service.MenuIngredientService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
 @RestController
@@ -35,7 +37,7 @@ public class MenuIngredientController {
 
     @PostMapping
     public ResponseEntity<ApiResponse<MenuIngredientResponse>> create(
-            @RequestBody MenuIngredientRequest request) {
+            @RequestBody @Valid MenuIngredientRequest request) {
         return ResponseEntity.ok(
                 ApiResponse.success(
                         "Menu Ingredient created successfully",
@@ -55,7 +57,17 @@ public class MenuIngredientController {
         return ResponseEntity.ok(
                 ApiResponse.success(
                         "Menu Ingredients retrieved successfully",
-                        menuIngredientService.findByMenuId(menuId)));
+                menuIngredientService.findByMenuId(menuId)));
+    }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<ApiResponse<MenuIngredientResponse>> update(
+            @PathVariable UUID id,
+            @RequestBody @Valid MenuIngredientRequest request) {
+        return ResponseEntity.ok(
+                ApiResponse.success(
+                        "Menu Ingredient updated successfully",
+                        menuIngredientService.update(id, request)));
     }
 
     @DeleteMapping("/{id}")

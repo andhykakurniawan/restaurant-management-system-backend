@@ -13,7 +13,7 @@ public record IngredientRequest(
         @NotBlank
         String name,
 
-        @NotBlank
+        @NotNull
         Unit unit,
 
         @NotNull

@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -18,6 +19,7 @@ import com.example.restaurant_be.ingredient.dto.IngredientRequest;
 import com.example.restaurant_be.ingredient.dto.IngredientResponse;
 import com.example.restaurant_be.ingredient.service.IngredientService;
 
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
 @RestController
@@ -37,7 +39,7 @@ public class IngredientController {
 
     @PostMapping
     public ResponseEntity<ApiResponse<IngredientResponse>> create(
-            @RequestBody IngredientRequest request) {
+            @RequestBody @Valid IngredientRequest request) {
         return ResponseEntity.ok(
                 ApiResponse.success(
                         "Ingredient created successfully",
@@ -49,7 +51,17 @@ public class IngredientController {
         return ResponseEntity.ok(
                 ApiResponse.success(
                         "Ingredient retrieved successfully",
-                        ingredientService.findById(id)));
+                ingredientService.findById(id)));
+    }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<ApiResponse<IngredientResponse>> update(
+            @PathVariable UUID id,
+            @RequestBody @Valid IngredientRequest request) {
+        return ResponseEntity.ok(
+                ApiResponse.success(
+                        "Ingredient updated successfully",
+                        ingredientService.update(id, request)));
     }
 
     @DeleteMapping("/{id}")

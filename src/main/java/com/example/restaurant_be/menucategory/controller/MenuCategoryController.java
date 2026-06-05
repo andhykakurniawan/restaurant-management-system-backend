@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -17,6 +18,7 @@ import com.example.restaurant_be.common.response.ApiResponse;
 import com.example.restaurant_be.menucategory.dto.MenuCategoryRequest;
 import com.example.restaurant_be.menucategory.dto.MenuCategoryResponse;
 import com.example.restaurant_be.menucategory.service.MenuCategoryService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
 @RestController
@@ -35,7 +37,7 @@ public class MenuCategoryController {
 
         @PostMapping
         public ResponseEntity<ApiResponse<MenuCategoryResponse>> create(
-                        @RequestBody MenuCategoryRequest request) {
+                        @RequestBody @Valid MenuCategoryRequest request) {
                 return ResponseEntity.ok(
                                 ApiResponse.success(
                                                 "Menu Category created successfully",
@@ -64,6 +66,17 @@ public class MenuCategoryController {
                                 ApiResponse.success(
                                                 "Menu Categorys retrieved successfully",
                                                 menuCategoryService.findByCategoryId(categoryId)));
+        }
+
+        @PutMapping("/{id}")
+        public ResponseEntity<ApiResponse<MenuCategoryResponse>> update(
+                        @PathVariable UUID id,
+                        @RequestBody @Valid MenuCategoryRequest request) {
+
+                return ResponseEntity.ok(
+                                ApiResponse.success(
+                                                "Menu category updated successfully",
+                                                menuCategoryService.update(id, request)));
         }
 
         @PatchMapping("/{id}")

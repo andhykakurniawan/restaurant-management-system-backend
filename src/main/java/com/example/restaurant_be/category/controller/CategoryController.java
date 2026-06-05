@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -51,6 +52,16 @@ public class CategoryController {
                                 ApiResponse.success(
                                                 "Category retrieved successfully",
                                                 categoryService.findById(id)));
+        }
+
+        @PutMapping("/{id}")
+        public ResponseEntity<ApiResponse<CategoryResponse>> update(
+                        @PathVariable UUID id,
+                        @RequestBody @Valid CategoryRequest request) {
+                return ResponseEntity.ok(
+                                ApiResponse.success(
+                                                "Category updated successfully",
+                                                categoryService.update(id, request)));
         }
 
         @DeleteMapping("/{id}")

@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -17,6 +18,7 @@ import com.example.restaurant_be.common.response.ApiResponse;
 import com.example.restaurant_be.menu.dto.MenuRequest;
 import com.example.restaurant_be.menu.dto.MenuResponse;
 import com.example.restaurant_be.menu.service.MenuService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
 @RestController
@@ -35,7 +37,7 @@ public class MenuController {
 
     @PostMapping
     public ResponseEntity<ApiResponse<MenuResponse>> create(
-            @RequestBody MenuRequest request) {
+            @RequestBody @Valid MenuRequest request) {
         return ResponseEntity.ok(
                 ApiResponse.success(
                         "Menu created successfully",
@@ -47,7 +49,17 @@ public class MenuController {
         return ResponseEntity.ok(
                 ApiResponse.success(
                         "Menu retrieved successfully",
-                        menuService.findById(id)));
+                menuService.findById(id)));
+    }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<ApiResponse<MenuResponse>> update(
+            @PathVariable UUID id,
+            @RequestBody @Valid MenuRequest request) {
+        return ResponseEntity.ok(
+                ApiResponse.success(
+                        "Menu updated successfully",
+                        menuService.update(id, request)));
     }
 
     @DeleteMapping("/{id}")
