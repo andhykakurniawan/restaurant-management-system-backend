@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.UUID;
 import java.time.LocalTime;
 import org.springframework.stereotype.Service;
+import com.example.restaurant_be.common.exception.NotFoundException;
 import com.example.restaurant_be.shift.dto.ShiftRequest;
 import com.example.restaurant_be.shift.dto.ShiftResponse;
 import com.example.restaurant_be.shift.repository.ShiftRepository;
@@ -46,19 +47,32 @@ public class ShiftService {
 
     public ShiftResponse findById(UUID id) {
         Shift shift = shiftRepository.findByIdIncludingInactive(id)
-                .orElseThrow(() -> new RuntimeException("Shift not found"));
+                .orElseThrow(() -> new NotFoundException("Shift not found"));
         return toResponse(shift);
+    }
+
+    public ShiftResponse update(UUID id, ShiftRequest request) {
+        Shift shift = shiftRepository.findByIdIncludingInactive(id)
+                .orElseThrow(() -> new NotFoundException("Shift not found"));
+
+        shift.setShiftName(request.shiftName());
+        shift.setStartTime(LocalTime.parse(request.startTime()));
+        shift.setEndTime(LocalTime.parse(request.endTime()));
+        shift.setGraceMinutes(request.graceMinutes());
+
+        Shift saved = shiftRepository.save(shift);
+        return toResponse(saved);
     }
 
     public void delete(UUID id) {
         Shift shift = shiftRepository.findByIdIncludingInactive(id)
-                .orElseThrow(() -> new RuntimeException("Shift not found"));
+                .orElseThrow(() -> new NotFoundException("Shift not found"));
         shiftRepository.delete(shift);
     }
 
     public ShiftResponse restore(UUID id) {
         Shift shift = shiftRepository.findByIdIncludingInactive(id)
-                .orElseThrow(() -> new RuntimeException("Shift not found"));
+                .orElseThrow(() -> new NotFoundException("Shift not found"));
         shift.setIsActive(true);
         Shift saved = shiftRepository.save(shift);
         return toResponse(saved);

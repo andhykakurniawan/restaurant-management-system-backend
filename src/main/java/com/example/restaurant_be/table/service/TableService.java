@@ -5,6 +5,8 @@ import java.util.UUID;
 
 import org.springframework.stereotype.Service;
 
+import com.example.restaurant_be.common.exception.ConflictException;
+import com.example.restaurant_be.common.exception.NotFoundException;
 import com.example.restaurant_be.table.dto.TableRequest;
 import com.example.restaurant_be.table.dto.TableResponse;
 import com.example.restaurant_be.table.entity.TableRestaurant;
@@ -38,7 +40,7 @@ public class TableService {
 
     public TableResponse create(TableRequest request) {
         if (tableRepository.existsByTableNumber(request.tableNumber())) {
-            throw new IllegalArgumentException("Table number already exists");
+            throw new ConflictException("Table number already exists");
         }
 
         TableRestaurant table = new TableRestaurant();
@@ -55,11 +57,11 @@ public class TableService {
 
     public TableResponse update(UUID id, TableRequest request) {
         TableRestaurant table = tableRepository.findByIdIncludingInactive(id)
-                .orElseThrow(() -> new IllegalArgumentException("Table not found"));
+                .orElseThrow(() -> new NotFoundException("Table not found"));
 
         if (!table.getTableNumber().equals(request.tableNumber()) &&
                 tableRepository.existsByTableNumber(request.tableNumber())) {
-            throw new IllegalArgumentException("Table number already exists");
+            throw new ConflictException("Table number already exists");
         }
 
         table.setTableNumber(request.tableNumber());
@@ -75,24 +77,24 @@ public class TableService {
 
     public TableResponse findById(UUID id) {
         TableRestaurant table = tableRepository.findByIdIncludingInactive(id)
-                .orElseThrow(() -> new IllegalArgumentException("Table not found"));
+                .orElseThrow(() -> new NotFoundException("Table not found"));
 
         return toResponse(table);
     }
 
     public void deleteById(UUID id) {
         TableRestaurant table = tableRepository.findByIdIncludingInactive(id)
-                .orElseThrow(() -> new IllegalArgumentException("Table not found"));
+                .orElseThrow(() -> new NotFoundException("Table not found"));
 
         tableRepository.delete(table);
     }
 
     public TableResponse restore(UUID id) {
         TableRestaurant table = tableRepository.findByIdIncludingInactive(id)
-                .orElseThrow(() -> new IllegalArgumentException("Table not found"));
+                .orElseThrow(() -> new NotFoundException("Table not found"));
 
         if (Boolean.TRUE.equals(table.getIsActive())) {
-            throw new IllegalArgumentException("Table already active");
+            throw new ConflictException("Table already active");
         }
 
         table.setIsActive(true);

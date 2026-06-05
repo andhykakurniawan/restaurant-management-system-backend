@@ -7,6 +7,8 @@ import java.util.Optional;
 
 import org.springframework.stereotype.Service;
 
+import com.example.restaurant_be.common.exception.ConflictException;
+import com.example.restaurant_be.common.exception.NotFoundException;
 import com.example.restaurant_be.menu.entity.Menu;
 import com.example.restaurant_be.menu.repository.MenuRepository;
 import com.example.restaurant_be.order.dto.OrderItemRequest;
@@ -29,7 +31,7 @@ public class OrderItemService {
         public List<OrderItemResponse> findAll(UUID orderId) {
 
                 orderRepository.findById(orderId)
-                                .orElseThrow(() -> new IllegalArgumentException("Order not found"));
+                                .orElseThrow(() -> new NotFoundException("Order not found"));
 
                 return orderItemRepository.findByOrder_Id(orderId)
                                 .stream()
@@ -40,19 +42,19 @@ public class OrderItemService {
         private void validateOrderEditable(Order order) {
 
                 if (order.getStatus() != Status.OPEN) {
-                        throw new IllegalStateException("Order already locked");
+                        throw new ConflictException("Order already locked");
                 }
         }
 
         public OrderItemResponse create(UUID orderId, OrderItemRequest request) {
 
                 Order order = orderRepository.findById(orderId)
-                                .orElseThrow(() -> new IllegalArgumentException("Order not found"));
+                                .orElseThrow(() -> new NotFoundException("Order not found"));
 
                 validateOrderEditable(order);
 
                 Menu menu = menuRepository.findById(request.menuId())
-                                .orElseThrow(() -> new IllegalArgumentException("Menu not found"));
+                                .orElseThrow(() -> new NotFoundException("Menu not found"));
 
                 BigDecimal price = menu.getPrice();
 
@@ -109,7 +111,9 @@ public class OrderItemService {
         public OrderItemResponse update(UUID orderId, UUID itemId, OrderItemRequest request) {
 
                 OrderItem item = orderItemRepository.findById(itemId)
-                                .orElseThrow(() -> new IllegalArgumentException("Item not found"));
+                                .orElseThrow(() -> new NotFoundException("Item not found"));
+
+                validateItemBelongsToOrder(item, orderId);
 
                 BigDecimal price = item.getPriceSnapshot();
 
@@ -136,7 +140,9 @@ public class OrderItemService {
         public void delete(UUID orderId, UUID itemId) {
 
                 OrderItem item = orderItemRepository.findById(itemId)
-                                .orElseThrow(() -> new IllegalArgumentException("Item not found"));
+                                .orElseThrow(() -> new NotFoundException("Item not found"));
+
+                validateItemBelongsToOrder(item, orderId);
 
                 Order order = item.getOrder();
 
@@ -158,6 +164,12 @@ public class OrderItemService {
                                 orderItem.getQuantity(),
                                 orderItem.getPriceSnapshot(),
                                 orderItem.getSubTotal());
+        }
+
+        private void validateItemBelongsToOrder(OrderItem item, UUID orderId) {
+                if (!item.getOrder().getId().equals(orderId)) {
+                        throw new ConflictException("Item does not belong to order");
+                }
         }
 
 }

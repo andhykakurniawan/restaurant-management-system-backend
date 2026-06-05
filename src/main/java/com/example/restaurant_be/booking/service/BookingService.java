@@ -14,6 +14,8 @@ import com.example.restaurant_be.booking.dto.BookingResponse;
 import com.example.restaurant_be.booking.entity.Booking;
 import com.example.restaurant_be.booking.entity.BookingStatus;
 import com.example.restaurant_be.booking.repository.BookingRepository;
+import com.example.restaurant_be.common.exception.ConflictException;
+import com.example.restaurant_be.common.exception.NotFoundException;
 import com.example.restaurant_be.payment.service.MidtransService;
 import com.example.restaurant_be.table.entity.AllocationType;
 import com.example.restaurant_be.table.entity.TableRestaurant;
@@ -59,15 +61,15 @@ public class BookingService {
                                 .findByIdAndAllocationType(
                                                 request.tableId(),
                                                 AllocationType.ONLINE)
-                                .orElseThrow(() -> new RuntimeException(
+                                .orElseThrow(() -> new NotFoundException(
                                                 "Table not available"));
 
                 if (table.getStatus() == TableStatus.OCCUPIED) {
-                        throw new IllegalStateException("Table is already occupied");
+                        throw new ConflictException("Table is already occupied");
                 } else if (table.getStatus() == TableStatus.RESERVED) {
-                        throw new IllegalStateException("Table is already reserved");
+                        throw new ConflictException("Table is already reserved");
                 } else if (table.getStatus() == TableStatus.BLOCKED) {
-                        throw new IllegalStateException("Table is under maintenance");
+                        throw new ConflictException("Table is under maintenance");
                 }
 
                 Booking booking = new Booking();
@@ -109,9 +111,6 @@ public class BookingService {
 
                 Booking savedBooking = bookingRepository.save(booking);
 
-                table.setStatus(TableStatus.OCCUPIED);
-                tableRepository.save(table);
-
                 return toResponse(savedBooking);
         }
 
@@ -119,17 +118,17 @@ public class BookingService {
         public BookingResponse cancelBooking(UUID id) {
 
                 Booking booking = bookingRepository.findById(id)
-                                .orElseThrow(() -> new RuntimeException("Booking not found"));
+                                .orElseThrow(() -> new NotFoundException("Booking not found"));
 
                 TableRestaurant table = booking.getTable();
 
                 if (booking.getStatus() == BookingStatus.CONFIRMED ||
                                 booking.getStatus() == BookingStatus.CHECKED_IN) {
-                        throw new IllegalStateException("Booking cannot be cancelled at this stage");
+                        throw new ConflictException("Booking cannot be cancelled at this stage");
                 }
 
                 if (booking.getStatus() == BookingStatus.CANCELLED) {
-                        throw new IllegalStateException("Booking is already cancelled");
+                        throw new ConflictException("Booking is already cancelled");
                 }
 
                 booking.setStatus(BookingStatus.CANCELLED);
@@ -145,7 +144,7 @@ public class BookingService {
 
         public BookingResponse getBookingByCode(String bookingCode) {
                 Booking booking = bookingRepository.findByBookingCode(bookingCode)
-                                .orElseThrow(() -> new RuntimeException("Booking not found"));
+                                .orElseThrow(() -> new NotFoundException("Booking not found"));
                 return toResponse(booking);
         }
 }

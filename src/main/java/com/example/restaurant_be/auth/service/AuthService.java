@@ -1,5 +1,6 @@
 package com.example.restaurant_be.auth.service;
 
+import com.example.restaurant_be.common.exception.UnauthorizedException;
 import com.example.restaurant_be.security.JwtService;
 import com.example.restaurant_be.user.entity.User;
 import com.example.restaurant_be.user.repository.UserRepository;
@@ -19,10 +20,10 @@ public class AuthService {
     public String login(String email, String password) {
 
         User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("Invalid credentials"));
+                .orElseThrow(() -> new UnauthorizedException("Invalid credentials"));
 
         if (!passwordEncoder.matches(password, user.getPassword())) {
-            throw new RuntimeException("Invalid credentials");
+            throw new UnauthorizedException("Invalid credentials");
         }
 
         return jwtService.generateToken(user.getEmail(), user.getRole().name());

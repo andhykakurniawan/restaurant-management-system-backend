@@ -4,6 +4,8 @@ import java.util.List;
 import java.util.UUID;
 import org.springframework.stereotype.Service;
 
+import com.example.restaurant_be.common.exception.NotFoundException;
+
 import com.example.restaurant_be.menu.entity.Menu;
 import com.example.restaurant_be.menu.repository.MenuRepository;
 import com.example.restaurant_be.ingredient.entity.Ingredients;
@@ -43,10 +45,10 @@ public class MenuIngredientService {
     public MenuIngredientResponse create(MenuIngredientRequest request) {
 
         Menu menu = menuRepository.findById(request.menuId())
-                .orElseThrow(() -> new IllegalArgumentException("Menu not found"));
+                .orElseThrow(() -> new NotFoundException("Menu not found"));
 
         Ingredients ingredient = ingredientRepository.findById(request.ingredientId())
-                .orElseThrow(() -> new IllegalArgumentException("Ingredient not found"));
+                .orElseThrow(() -> new NotFoundException("Ingredient not found"));
 
         MenuIngredient menuIngredient = new MenuIngredient();
         menuIngredient.setMenu(menu);
@@ -60,7 +62,7 @@ public class MenuIngredientService {
 
     public MenuIngredientResponse findById(UUID id) {
         MenuIngredient menuIngredient = menuIngredientRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("MenuIngredient not found"));
+                .orElseThrow(() -> new NotFoundException("MenuIngredient not found"));
 
         return toResponse(menuIngredient);
     }
@@ -72,16 +74,35 @@ public class MenuIngredientService {
                 .toList();
     }
 
+    public MenuIngredientResponse update(UUID id, MenuIngredientRequest request) {
+        MenuIngredient menuIngredient = menuIngredientRepository.findByIdIncludingInactive(id)
+                .orElseThrow(() -> new NotFoundException("MenuIngredient not found"));
+
+        Menu menu = menuRepository.findById(request.menuId())
+                .orElseThrow(() -> new NotFoundException("Menu not found"));
+
+        Ingredients ingredient = ingredientRepository.findById(request.ingredientId())
+                .orElseThrow(() -> new NotFoundException("Ingredient not found"));
+
+        menuIngredient.setMenu(menu);
+        menuIngredient.setIngredient(ingredient);
+        menuIngredient.setQuantity(request.quantity());
+
+        MenuIngredient saved = menuIngredientRepository.save(menuIngredient);
+
+        return toResponse(saved);
+    }
+
     public void deleteById(UUID id) {
         if (!menuIngredientRepository.existsById(id)) {
-            throw new IllegalArgumentException("MenuIngredient not found");
+            throw new NotFoundException("MenuIngredient not found");
         }
         menuIngredientRepository.deleteById(id);
     }
 
     public MenuIngredientResponse restore(UUID id) {
         MenuIngredient menuIngredient = menuIngredientRepository.findByIdIncludingInactive(id)
-                .orElseThrow(() -> new IllegalArgumentException("MenuIngredient not found"));
+                .orElseThrow(() -> new NotFoundException("MenuIngredient not found"));
 
         menuIngredient.setIsActive(true);
         MenuIngredient restored = menuIngredientRepository.save(menuIngredient);
@@ -89,3 +110,4 @@ public class MenuIngredientService {
         return toResponse(restored);
     }
 }
+

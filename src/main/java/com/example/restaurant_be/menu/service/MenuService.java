@@ -6,6 +6,8 @@ import org.springframework.stereotype.Service;
 
 import com.example.restaurant_be.category.entity.Category;
 import com.example.restaurant_be.category.repository.CategoryRepository;
+import com.example.restaurant_be.common.exception.ConflictException;
+import com.example.restaurant_be.common.exception.NotFoundException;
 import com.example.restaurant_be.menu.dto.MenuRequest;
 import com.example.restaurant_be.menu.dto.MenuResponse;
 import com.example.restaurant_be.menu.entity.Menu;
@@ -42,11 +44,11 @@ public class MenuService {
     public MenuResponse create(MenuRequest request) {
 
         if (menuRepository.existsByName(request.name())) {
-            throw new IllegalArgumentException("Menu name already exists");
+            throw new ConflictException("Menu name already exists");
         }
 
         Category category = categoryRepository.findById(request.categoryId())
-                .orElseThrow(() -> new IllegalArgumentException("Category not found"));
+                .orElseThrow(() -> new NotFoundException("Category not found"));
 
         Menu menu = new Menu();
         menu.setName(request.name());
@@ -63,24 +65,48 @@ public class MenuService {
 
     public MenuResponse findById(UUID id) {
         Menu menu = menuRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("Menu not found"));
+                .orElseThrow(() -> new NotFoundException("Menu not found"));
 
         return toResponse(menu);
     }
 
+    public MenuResponse update(UUID id, MenuRequest request) {
+        Menu menu = menuRepository.findByIdIncludingInactive(id)
+                .orElseThrow(() -> new NotFoundException("Menu not found"));
+
+        if (!menu.getName().equals(request.name()) &&
+                menuRepository.existsByName(request.name())) {
+            throw new ConflictException("Menu name already exists");
+        }
+
+        Category category = categoryRepository.findById(request.categoryId())
+                .orElseThrow(() -> new NotFoundException("Category not found"));
+
+        menu.setName(request.name());
+        menu.setDescription(request.description());
+        menu.setPrice(request.price());
+        menu.setImageUrl(request.imageUrl());
+        menu.setIsAvailable(request.isAvailable());
+        menu.setCategory(category);
+
+        Menu saved = menuRepository.save(menu);
+
+        return toResponse(saved);
+    }
+
     public void delete(UUID id) {
         Menu menu = menuRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("Menu not found"));
+                .orElseThrow(() -> new NotFoundException("Menu not found"));
 
         menuRepository.delete(menu);
     }
 
     public MenuResponse restore(UUID id) {
         Menu menu = menuRepository.findByIdIncludingInactive(id)
-                .orElseThrow(() -> new IllegalArgumentException("Menu not found"));
+                .orElseThrow(() -> new NotFoundException("Menu not found"));
 
         if (Boolean.TRUE.equals(menu.getIsActive())) {
-            throw new IllegalArgumentException("Menu already active");
+            throw new ConflictException("Menu already active");
         }
 
         menu.setIsActive(true);

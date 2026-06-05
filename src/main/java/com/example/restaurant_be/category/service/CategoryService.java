@@ -8,6 +8,8 @@ import com.example.restaurant_be.category.dto.CategoryRequest;
 import com.example.restaurant_be.category.dto.CategoryResponse;
 import com.example.restaurant_be.category.entity.Category;
 import com.example.restaurant_be.category.repository.CategoryRepository;
+import com.example.restaurant_be.common.exception.ConflictException;
+import com.example.restaurant_be.common.exception.NotFoundException;
 
 import lombok.RequiredArgsConstructor;
 
@@ -34,7 +36,7 @@ public class CategoryService {
     public CategoryResponse create(CategoryRequest request) {
 
         if (categoryRepository.existsByName(request.name())) {
-            throw new IllegalArgumentException("Category name already exists");
+            throw new ConflictException("Category name already exists");
         }
 
         Category category = new Category();
@@ -48,14 +50,31 @@ public class CategoryService {
 
     public CategoryResponse findById(UUID id) {
         Category category = categoryRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("Category not found"));
+                .orElseThrow(() -> new NotFoundException("Category not found"));
 
         return toResponse(category);
     }
 
+    public CategoryResponse update(UUID id, CategoryRequest request) {
+        Category category = categoryRepository.findByIdIncludingInactive(id)
+                .orElseThrow(() -> new NotFoundException("Category not found"));
+
+        if (!category.getName().equals(request.name())
+                && categoryRepository.existsByName(request.name())) {
+            throw new ConflictException("Category name already exists");
+        }
+
+        category.setName(request.name());
+        category.setDescription(request.description());
+
+        Category saved = categoryRepository.save(category);
+
+        return toResponse(saved);
+    }
+
     public void delete(UUID id) {
         Category category = categoryRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("Category not found"));
+                .orElseThrow(() -> new NotFoundException("Category not found"));
 
         categoryRepository.delete(category);
     }
@@ -63,10 +82,10 @@ public class CategoryService {
     public CategoryResponse restore(UUID id) {
 
         Category category = categoryRepository.findByIdIncludingInactive(id)
-                .orElseThrow(() -> new IllegalArgumentException("Category not found"));
+                .orElseThrow(() -> new NotFoundException("Category not found"));
 
         if (Boolean.TRUE.equals(category.getIsActive())) {
-            throw new IllegalArgumentException("Category already active");
+            throw new ConflictException("Category already active");
         }
 
         category.setIsActive(true);

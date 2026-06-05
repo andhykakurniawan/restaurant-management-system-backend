@@ -6,6 +6,8 @@ import java.util.UUID;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import com.example.restaurant_be.common.exception.ConflictException;
+import com.example.restaurant_be.common.exception.NotFoundException;
 import com.example.restaurant_be.user.dto.UserRequest;
 import com.example.restaurant_be.user.dto.UserResponse;
 import com.example.restaurant_be.user.entity.User;
@@ -39,7 +41,7 @@ public class UserService {
     public UserResponse create(UserRequest request) {
 
         if (userRepository.existsByEmail(request.email())) {
-            throw new IllegalArgumentException("Email already exists");
+            throw new ConflictException("Email already exists");
         }
 
         User user = new User();
@@ -55,24 +57,43 @@ public class UserService {
 
     public UserResponse findById(UUID id) {
         User user = userRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+                .orElseThrow(() -> new NotFoundException("User not found"));
 
         return toResponse(user);
     }
 
+    public UserResponse update(UUID id, UserRequest request) {
+        User user = userRepository.findByIdIncludingInactive(id)
+                .orElseThrow(() -> new NotFoundException("User not found"));
+
+        if (!user.getEmail().equals(request.email()) &&
+                userRepository.existsByEmail(request.email())) {
+            throw new ConflictException("Email already exists");
+        }
+
+        user.setUsername(request.username());
+        user.setEmail(request.email());
+        user.setPassword(passwordEncoder.encode(request.password()));
+        user.setRole(request.role());
+
+        User saved = userRepository.save(user);
+
+        return toResponse(saved);
+    }
+
     public void delete(UUID id) {
         User user = userRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+                .orElseThrow(() -> new NotFoundException("User not found"));
 
         userRepository.delete(user);
     }
 
     public UserResponse restore(UUID id) {
         User user = userRepository.findByIdIncludingInactive(id)
-                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+                .orElseThrow(() -> new NotFoundException("User not found"));
 
         if (Boolean.TRUE.equals(user.getIsActive())) {
-            throw new IllegalArgumentException("User already active");
+            throw new ConflictException("User already active");
         }
 
         user.setIsActive(true);

@@ -15,6 +15,8 @@ import com.example.restaurant_be.attendance.dto.AttendanceResponse;
 import com.example.restaurant_be.attendance.entity.Attendance;
 import com.example.restaurant_be.attendance.entity.Status;
 import com.example.restaurant_be.attendance.repository.AttendanceRepository;
+import com.example.restaurant_be.common.exception.ConflictException;
+import com.example.restaurant_be.common.exception.NotFoundException;
 import com.example.restaurant_be.shift.entity.Shift;
 import com.example.restaurant_be.shift.repository.ShiftRepository;
 import com.example.restaurant_be.user.entity.User;
@@ -36,15 +38,15 @@ public class AttendanceService {
         // String username = authentication.getName();
 
         User user = userRepository.findByEmail(authentication.getName())
-                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+                .orElseThrow(() -> new NotFoundException("User not found"));
 
         Shift shift = shiftRepository.findById(request.shiftId())
-                .orElseThrow(() -> new IllegalArgumentException("Shift not found"));
+                .orElseThrow(() -> new NotFoundException("Shift not found"));
 
         LocalDate today = LocalDate.now();
 
         if (attendanceRepository.existsByUserIdAndAttendanceDate(user.getId(), today)) {
-            throw new IllegalArgumentException("User already checked in today");
+            throw new ConflictException("User already checked in today");
         }
 
         LocalDateTime now = LocalDateTime.now();
@@ -70,10 +72,10 @@ public class AttendanceService {
     public AttendanceResponse checkOut(UUID id) {
 
         Attendance attendance = attendanceRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("Attendance not found"));
+                .orElseThrow(() -> new NotFoundException("Attendance not found"));
 
         if (attendance.getClockOut() != null) {
-            throw new IllegalArgumentException("Already checked out");
+            throw new ConflictException("Already checked out");
         }
 
         LocalDateTime now = LocalDateTime.now();
@@ -94,7 +96,7 @@ public class AttendanceService {
     public AttendanceResponse findById(UUID id) {
 
         Attendance attendance = attendanceRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("Attendance not found"));
+                .orElseThrow(() -> new NotFoundException("Attendance not found"));
 
         return toResponse(attendance);
     }
