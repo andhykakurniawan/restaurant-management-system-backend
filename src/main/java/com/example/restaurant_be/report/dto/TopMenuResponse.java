@@ -1,5 +1,11 @@
 package com.example.restaurant_be.report.dto;
 
-public class TopMenuResponse {
-    
+import java.math.BigDecimal;
+import java.util.UUID;
+
+public record TopMenuResponse(
+        UUID menuId,
+        String menuName,
+        Long quantitySold,
+        BigDecimal revenue) {
 }

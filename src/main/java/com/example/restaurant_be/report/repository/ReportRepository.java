@@ -5,6 +5,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -102,4 +103,50 @@ public interface ReportRepository extends JpaRepository<Payment, UUID> {
     Long getYearlyItemsSold(
             LocalDateTime start,
             LocalDateTime end);
+
+    @Query("""
+                SELECT oi.menu.id,
+                       oi.menu.name,
+                       COALESCE(SUM(oi.quantity), 0),
+                       COALESCE(SUM(oi.subTotal), 0)
+                FROM OrderItem oi
+                JOIN Payment p ON oi.order = p.order
+                WHERE p.paidAt >= :start
+                AND p.paidAt < :end
+                AND p.status = 'SUCCESS'
+                GROUP BY oi.menu.id, oi.menu.name
+                ORDER BY COALESCE(SUM(oi.quantity), 0) DESC
+            """)
+    List<Object[]> getTopMenus(
+            @Param("start") LocalDateTime start,
+            @Param("end") LocalDateTime end,
+            Pageable pageable);
+
+    @Query("""
+                SELECT c.id,
+                       c.username,
+                       COUNT(p),
+                       COALESCE(SUM(p.amount), 0)
+                FROM Payment p
+                LEFT JOIN p.cashier c
+                WHERE p.paidAt >= :start
+                AND p.paidAt < :end
+                AND p.status = 'SUCCESS'
+                GROUP BY c.id, c.username
+                ORDER BY COALESCE(SUM(p.amount), 0) DESC
+            """)
+    List<Object[]> getSalesByCashier(
+            @Param("start") LocalDateTime start,
+            @Param("end") LocalDateTime end);
+
+    @Query("""
+                SELECT p
+                FROM Payment p
+                WHERE p.paidAt >= :start
+                AND p.paidAt < :end
+                AND p.status = 'SUCCESS'
+            """)
+    List<Payment> findSuccessfulPaymentsBetween(
+            @Param("start") LocalDateTime start,
+            @Param("end") LocalDateTime end);
 }
