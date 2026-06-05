@@ -11,6 +11,7 @@ import com.example.restaurant_be.order.dto.OrderRequest;
 import com.example.restaurant_be.order.dto.OrderResponse;
 import com.example.restaurant_be.order.service.OrderService;
 
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
 @RestController
@@ -31,8 +32,13 @@ public class OrderController {
     }
 
     @PostMapping
-    public ResponseEntity<OrderResponse> create(@RequestBody OrderRequest request) {
+    public ResponseEntity<OrderResponse> create(@Valid @RequestBody OrderRequest request) {
         return ResponseEntity.ok(orderService.create(request));
+    }
+
+    @GetMapping("/session/{sessionId}")
+    public ResponseEntity<OrderResponse> findBySessionId(@PathVariable UUID sessionId) {
+        return ResponseEntity.ok(orderService.findBySessionId(sessionId));
     }
 
     @DeleteMapping("/{id}")

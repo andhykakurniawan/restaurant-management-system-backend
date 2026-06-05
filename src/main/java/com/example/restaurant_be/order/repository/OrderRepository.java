@@ -5,6 +5,7 @@ import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 
 import com.example.restaurant_be.order.entity.Order;
+import com.example.restaurant_be.order.entity.Status;
 
 import java.util.UUID;
 import java.util.Optional;
@@ -20,4 +21,8 @@ public interface OrderRepository extends JpaRepository<Order, UUID> {
     void restoreById(UUID id);
 
     Optional<Order> findTopByOrderCodeStartingWithOrderByOrderCodeDesc(String prefix);
+
+    Optional<Order> findByOrderSession_Id(UUID sessionId);
+
+    boolean existsByOrderSession_IdAndStatusNot(UUID sessionId, Status status);
 }

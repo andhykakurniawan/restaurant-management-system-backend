@@ -49,6 +49,32 @@ public class OrderSessionController {
                         response));
     }
 
+    @PostMapping("/walk-in")
+    @PreAuthorize("hasRole('ROLE_SUPER_ADMIN') or hasRole('ROLE_WAITER')")
+    public ResponseEntity<ApiResponse<OrderSessionResponse>> createWalkInSession(
+            @Valid @RequestBody OrderSessionRequest request) {
+
+        OrderSessionResponse response = orderSessionService.createWalkInSession(request);
+
+        return ResponseEntity.ok(
+                ApiResponse.success(
+                        "Walk-in order session created successfully",
+                        response));
+    }
+
+    @PostMapping("/check-in-booking")
+    @PreAuthorize("hasRole('ROLE_SUPER_ADMIN') or hasRole('ROLE_WAITER')")
+    public ResponseEntity<ApiResponse<OrderSessionResponse>> checkInBooking(
+            @Valid @RequestBody OrderSessionRequest request) {
+
+        OrderSessionResponse response = orderSessionService.checkInBooking(request);
+
+        return ResponseEntity.ok(
+                ApiResponse.success(
+                        "Booking checked in successfully",
+                        response));
+    }
+
     @PatchMapping("/{id}/close")
     @PreAuthorize("hasRole('ROLE_SUPER_ADMIN') or hasRole('ROLE_WAITER')")
     public ResponseEntity<ApiResponse<UUID>> closeSession(@PathVariable("id") UUID id) {

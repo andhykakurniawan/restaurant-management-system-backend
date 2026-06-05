@@ -10,6 +10,7 @@ import com.example.restaurant_be.order.dto.OrderItemRequest;
 import com.example.restaurant_be.order.dto.OrderItemResponse;
 import com.example.restaurant_be.order.service.OrderItemService;
 
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
 @RestController
@@ -29,7 +30,7 @@ public class OrderItemController {
     @PostMapping
     public ResponseEntity<OrderItemResponse> create(
             @PathVariable UUID orderId,
-            @RequestBody OrderItemRequest request) {
+            @Valid @RequestBody OrderItemRequest request) {
 
         return ResponseEntity.ok(orderItemService.create(orderId, request));
     }
@@ -38,7 +39,7 @@ public class OrderItemController {
     public ResponseEntity<OrderItemResponse> update(
             @PathVariable UUID orderId,
             @PathVariable UUID itemId,
-            @RequestBody OrderItemRequest request) {
+            @Valid @RequestBody OrderItemRequest request) {
 
         return ResponseEntity.ok(orderItemService.update(orderId, itemId, request));
     }

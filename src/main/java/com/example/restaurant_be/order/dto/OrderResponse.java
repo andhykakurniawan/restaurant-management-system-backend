@@ -8,6 +8,9 @@ import com.example.restaurant_be.order.entity.Status;
 public record OrderResponse(
     UUID id,
     String orderCode,
+    UUID sessionId,
+    UUID tableId,
+    String tableNumber,
     UUID createdById,
     String createdByName,
     Status status,

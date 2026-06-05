@@ -6,6 +6,7 @@ import org.hibernate.annotations.SQLDelete;
 import org.hibernate.annotations.SQLRestriction;
 
 import com.example.restaurant_be.common.base.BaseEntity;
+import com.example.restaurant_be.ordersession.entity.OrderSession;
 import com.example.restaurant_be.user.entity.User;
 
 import jakarta.persistence.Column;
@@ -33,6 +34,10 @@ public class Order extends BaseEntity {
     @JoinColumn(name = "created_by", nullable = false)
     @ManyToOne
     private User createdBy;
+
+    @JoinColumn(name = "order_session_id", nullable = false)
+    @ManyToOne
+    private OrderSession orderSession;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
