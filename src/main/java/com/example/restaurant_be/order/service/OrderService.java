@@ -9,6 +9,7 @@ import java.util.UUID;
 
 import org.springframework.stereotype.Service;
 
+import com.example.restaurant_be.audit.service.AuditLogService;
 import com.example.restaurant_be.order.dto.OrderRequest;
 import com.example.restaurant_be.order.dto.OrderResponse;
 import com.example.restaurant_be.order.entity.Order;
@@ -32,6 +33,7 @@ public class OrderService {
     private final OrderRepository orderRepository;
     private final OrderSessionRepository orderSessionRepository;
     private final InventoryService inventoryService;
+    private final AuditLogService auditLogService;
 
     public List<OrderResponse> findAll() {
         return orderRepository.findAll()
@@ -52,6 +54,16 @@ public class OrderService {
                 .orElseThrow(() -> new NotFoundException("Order not found for session"));
 
         return toResponse(order);
+    }
+
+    public List<OrderResponse> findKitchenQueue() {
+        return orderRepository.findByStatusInOrderByUpdatedAtAsc(List.of(
+                Status.CONFIRMED,
+                Status.PREPARING,
+                Status.READY))
+                .stream()
+                .map(this::toResponse)
+                .toList();
     }
 
     @Transactional
@@ -85,6 +97,8 @@ public class OrderService {
         session.setStatus(SessionStatus.ACTIVE);
         orderSessionRepository.save(session);
 
+        auditLogService.log("ORDER_CREATED", "Order", saved.getId(), saved.getOrderCode());
+
         return toResponse(saved);
     }
 
@@ -105,6 +119,7 @@ public class OrderService {
         }
 
         orderRepository.delete(order);
+        auditLogService.log("ORDER_DELETED", "Order", order.getId(), order.getOrderCode());
     }
 
     @Transactional
@@ -118,6 +133,7 @@ public class OrderService {
         }
 
         orderRepository.restoreById(id);
+        auditLogService.log("ORDER_RESTORED", "Order", id, order.getOrderCode());
 
         return toResponse(orderRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Restore failed")));
@@ -174,6 +190,7 @@ public class OrderService {
         order.setStatus(Status.CONFIRMED);
 
         Order updatedOrder = orderRepository.save(order);
+        auditLogService.log("ORDER_CONFIRMED", "Order", updatedOrder.getId(), updatedOrder.getOrderCode());
 
         return toResponse(updatedOrder);
     }
@@ -196,6 +213,7 @@ public class OrderService {
         order.setStatus(Status.CANCELLED);
 
         Order updatedOrder = orderRepository.save(order);
+        auditLogService.log("ORDER_CANCELLED", "Order", updatedOrder.getId(), updatedOrder.getOrderCode());
 
         return toResponse(updatedOrder);
     }
@@ -213,6 +231,7 @@ public class OrderService {
         order.setStatus(Status.COMPLETED);
 
         Order updatedOrder = orderRepository.save(order);
+        auditLogService.log("ORDER_COMPLETED", "Order", updatedOrder.getId(), updatedOrder.getOrderCode());
 
         return toResponse(updatedOrder);
     }
@@ -229,7 +248,10 @@ public class OrderService {
 
         order.setStatus(Status.PREPARING);
 
-        return toResponse(orderRepository.save(order));
+        Order updatedOrder = orderRepository.save(order);
+        auditLogService.log("ORDER_PREPARING", "Order", updatedOrder.getId(), updatedOrder.getOrderCode());
+
+        return toResponse(updatedOrder);
     }
 
     @Transactional
@@ -245,6 +267,7 @@ public class OrderService {
         order.setStatus(Status.READY);
 
         Order updatedOrder = orderRepository.save(order);
+        auditLogService.log("ORDER_READY", "Order", updatedOrder.getId(), updatedOrder.getOrderCode());
 
         return toResponse(updatedOrder);
     }
@@ -262,6 +285,7 @@ public class OrderService {
         order.setStatus(Status.SERVED);
 
         Order updatedOrder = orderRepository.save(order);
+        auditLogService.log("ORDER_SERVED", "Order", updatedOrder.getId(), updatedOrder.getOrderCode());
 
         return toResponse(updatedOrder);
     }

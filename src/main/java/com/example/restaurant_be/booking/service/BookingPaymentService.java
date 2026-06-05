@@ -10,6 +10,7 @@ import java.util.Map;
 
 import org.springframework.stereotype.Service;
 
+import com.example.restaurant_be.audit.service.AuditLogService;
 import com.example.restaurant_be.booking.entity.Booking;
 import com.example.restaurant_be.booking.entity.BookingStatus;
 import com.example.restaurant_be.booking.repository.BookingRepository;
@@ -38,6 +39,7 @@ public class BookingPaymentService {
     private final ObjectMapper objectMapper;
 
     private final MidtransProperties midtransProperties;
+    private final AuditLogService auditLogService;
 
     @Transactional
     public void handleNotification(
@@ -91,6 +93,11 @@ public class BookingPaymentService {
 
             TableRestaurant table = booking.getTable();
             handleBookingStatus(booking, transactionStatus, fraudStatus, table);
+            auditLogService.log(
+                    "BOOKING_PAYMENT_NOTIFICATION",
+                    "Booking",
+                    booking.getId(),
+                    "status=" + transactionStatus + ", transactionId=" + transactionId);
 
         } catch (BadRequestException | NotFoundException e) {
             throw e;

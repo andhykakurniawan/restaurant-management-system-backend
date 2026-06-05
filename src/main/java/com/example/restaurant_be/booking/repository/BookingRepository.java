@@ -33,10 +33,32 @@ public interface BookingRepository extends JpaRepository<Booking, UUID> {
 
     @Query("""
             SELECT b FROM Booking b
+            WHERE b.table.id = :tableId
+            AND b.bookingDate = :bookingDate
+            AND b.status IN :statuses
+            """)
+    List<Booking> findBookingsForCollisionCheck(
+            @Param("tableId") UUID tableId,
+            @Param("bookingDate") LocalDate bookingDate,
+            @Param("statuses") List<BookingStatus> statuses);
+
+    @Query("""
+            SELECT b FROM Booking b
             WHERE b.expiredAt < :now
             AND b.status IN :statuses
             """)
     List<Booking> findExpiredBookings(
             @Param("now") LocalDateTime now,
             @Param("statuses") List<BookingStatus> statuses);
+
+    @Query("""
+            SELECT b FROM Booking b
+            WHERE b.status = :status
+            AND b.bookingDate = :date
+            AND b.bookingTime < :time
+            """)
+    List<Booking> findConfirmedBookingsBefore(
+            @Param("status") BookingStatus status,
+            @Param("date") LocalDate date,
+            @Param("time") LocalTime time);
 }

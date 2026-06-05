@@ -41,6 +41,12 @@ public class OrderController {
         return ResponseEntity.ok(orderService.findBySessionId(sessionId));
     }
 
+    @GetMapping("/kitchen-queue")
+    @PreAuthorize("hasRole('SUPER_ADMIN') or hasRole('CHEF') or hasRole('WAITER')")
+    public ResponseEntity<List<OrderResponse>> findKitchenQueue() {
+        return ResponseEntity.ok(orderService.findKitchenQueue());
+    }
+
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(@PathVariable UUID id) {
         orderService.delete(id);

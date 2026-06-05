@@ -8,6 +8,7 @@ import com.example.restaurant_be.order.entity.Order;
 import com.example.restaurant_be.order.entity.Status;
 
 import java.util.UUID;
+import java.util.List;
 import java.util.Optional;
 
 public interface OrderRepository extends JpaRepository<Order, UUID> {
@@ -25,4 +26,6 @@ public interface OrderRepository extends JpaRepository<Order, UUID> {
     Optional<Order> findByOrderSession_Id(UUID sessionId);
 
     boolean existsByOrderSession_IdAndStatusNot(UUID sessionId, Status status);
+
+    List<Order> findByStatusInOrderByUpdatedAtAsc(List<Status> statuses);
 }

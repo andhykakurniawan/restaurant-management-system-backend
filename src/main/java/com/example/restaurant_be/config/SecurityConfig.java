@@ -52,6 +52,7 @@ public class SecurityConfig {
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> {
                     auth.requestMatchers("/api/auth/login").permitAll()
+                            .requestMatchers(HttpMethod.GET, "/api/order-sessions/token/*").permitAll()
                             .requestMatchers("/api/auth/me").authenticated();
 
                     if (relaxedPermitAll) {
@@ -62,6 +63,7 @@ public class SecurityConfig {
                                 .requestMatchers("/api/menu-ingredients/**").permitAll()
                                 .requestMatchers("/api/menu-categories/**").permitAll()
                                 .requestMatchers("/api/inventory/**").permitAll()
+                                .requestMatchers("/api/audit-logs/**").permitAll()
                                 .requestMatchers("/api/orders/**").permitAll()
                                 .requestMatchers("/api/payments/**").permitAll()
                                 .requestMatchers("/api/reports/**").permitAll()

@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.example.restaurant_be.common.response.ApiResponse;
+import com.example.restaurant_be.ordersession.dto.CustomerOrderSessionResponse;
 import com.example.restaurant_be.ordersession.dto.OrderSessionRequest;
 import com.example.restaurant_be.ordersession.dto.OrderSessionResponse;
 import com.example.restaurant_be.ordersession.service.OrderSessionService;
@@ -34,6 +35,14 @@ public class OrderSessionController {
                 ApiResponse.success(
                         "Order sessions retrieved successfully",
                         orderSessionService.findAll()));
+    }
+
+    @GetMapping("/token/{token}")
+    public ResponseEntity<ApiResponse<CustomerOrderSessionResponse>> findByToken(@PathVariable String token) {
+        return ResponseEntity.ok(
+                ApiResponse.success(
+                        "Order session retrieved successfully",
+                        orderSessionService.findByToken(token)));
     }
 
     @PostMapping

@@ -28,6 +28,8 @@ public record BookingRequest(
 
     @NotNull
     @DecimalMin("0.0")
-    BigDecimal dpAmount
+    BigDecimal dpAmount,
+
+    Integer durationMinutes
 ) {
 } 

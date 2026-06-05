@@ -9,12 +9,14 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
+import com.example.restaurant_be.audit.service.AuditLogService;
 import com.example.restaurant_be.booking.entity.Booking;
 import com.example.restaurant_be.booking.entity.BookingStatus;
 import com.example.restaurant_be.booking.repository.BookingRepository;
 import com.example.restaurant_be.common.exception.BadRequestException;
 import com.example.restaurant_be.common.exception.ConflictException;
 import com.example.restaurant_be.common.exception.NotFoundException;
+import com.example.restaurant_be.ordersession.dto.CustomerOrderSessionResponse;
 import com.example.restaurant_be.ordersession.dto.OrderSessionRequest;
 import com.example.restaurant_be.ordersession.dto.OrderSessionResponse;
 import com.example.restaurant_be.ordersession.entity.OrderSession;
@@ -47,6 +49,7 @@ public class OrderSessionService {
         private final BookingRepository bookingRepository;
 
         private final OrderRepository orderRepository;
+        private final AuditLogService auditLogService;
 
         @Value("${app.frontend-url}")
         private String frontendUrl;
@@ -56,6 +59,28 @@ public class OrderSessionService {
                 return sessions.stream()
                                 .map(this::toResponse)
                                 .toList();
+        }
+
+        public CustomerOrderSessionResponse findByToken(String token) {
+                OrderSession session = orderSessionRepository.findBySessionTokenAndIsActiveTrue(token)
+                                .orElseThrow(() -> new NotFoundException("Order session not found"));
+
+                if (session.getStatus() == SessionStatus.CLOSED
+                                || session.getStatus() == SessionStatus.EXPIRED
+                                || session.getStatus() == SessionStatus.CANCELLED) {
+                        throw new ConflictException("Order session is not active");
+                }
+
+                Order order = orderRepository.findByOrderSession_Id(session.getId())
+                                .orElse(null);
+
+                return new CustomerOrderSessionResponse(
+                                session.getId(),
+                                session.getTable().getTableNumber(),
+                                session.getSessionToken(),
+                                session.getStatus(),
+                                order != null ? order.getId() : null,
+                                order != null ? order.getStatus() : null);
         }
 
         @Transactional
@@ -81,6 +106,8 @@ public class OrderSessionService {
                 }
 
                 OrderSession saved = openSession(table, user, null);
+                auditLogService.log("ORDER_SESSION_CREATED", "OrderSession", saved.getId(),
+                                "walk-in table=" + table.getTableNumber());
 
                 return toResponse(saved);
         }
@@ -117,6 +144,8 @@ public class OrderSessionService {
                 bookingRepository.save(booking);
 
                 OrderSession saved = openSession(table, user, booking);
+                auditLogService.log("BOOKING_CHECKED_IN", "OrderSession", saved.getId(),
+                                "booking=" + booking.getBookingCode());
 
                 return toResponse(saved);
         }
@@ -214,6 +243,8 @@ public class OrderSessionService {
                                 session.getTable());
 
                 orderSessionRepository.save(session);
+                auditLogService.log("ORDER_SESSION_CLOSED", "OrderSession", session.getId(),
+                                "table=" + session.getTable().getTableNumber());
         }
 
         private void validateOrderCanCloseSession(Order order) {

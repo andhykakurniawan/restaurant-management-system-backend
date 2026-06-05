@@ -32,4 +32,5 @@ public interface OrderSessionRepository extends JpaRepository<OrderSession, UUID
             LocalDateTime now,
             List<SessionStatus> statuses);
 
+    Optional<OrderSession> findBySessionTokenAndIsActiveTrue(String sessionToken);
 }

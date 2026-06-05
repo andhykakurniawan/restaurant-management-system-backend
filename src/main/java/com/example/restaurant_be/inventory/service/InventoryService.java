@@ -8,6 +8,7 @@ import java.util.UUID;
 
 import org.springframework.stereotype.Service;
 
+import com.example.restaurant_be.audit.service.AuditLogService;
 import com.example.restaurant_be.common.exception.BadRequestException;
 import com.example.restaurant_be.common.exception.ConflictException;
 import com.example.restaurant_be.common.exception.NotFoundException;
@@ -36,6 +37,7 @@ public class InventoryService {
     private final MenuIngredientRepository menuIngredientRepository;
     private final OrderItemRepository orderItemRepository;
     private final StockMovementRepository stockMovementRepository;
+    private final AuditLogService auditLogService;
 
     public List<StockMovementResponse> findAllMovements() {
         return stockMovementRepository.findAll()
@@ -86,6 +88,12 @@ public class InventoryService {
                 stockBefore,
                 stockAfter,
                 request.note());
+
+        auditLogService.log(
+                "STOCK_ADJUSTED",
+                "Ingredient",
+                ingredient.getId(),
+                request.type() + " " + request.quantity() + " " + ingredient.getName());
 
         return toResponse(movement);
     }

@@ -42,6 +42,9 @@ public class Booking extends BaseEntity {
     @Column(nullable = false)
     private LocalTime bookingTime;
 
+    @Column(nullable = false)
+    private Integer durationMinutes = 90;
+
     @Column(nullable = false, unique = true)
     private String bookingCode;
 
@@ -66,4 +69,6 @@ public class Booking extends BaseEntity {
     private LocalDateTime paidAt;
 
     private LocalDateTime cancelledAt;
+
+    private LocalDateTime noShowAt;
 }

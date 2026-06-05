@@ -16,6 +16,7 @@ import java.util.Map;
 
 import org.junit.jupiter.api.Test;
 
+import com.example.restaurant_be.audit.service.AuditLogService;
 import com.example.restaurant_be.booking.repository.BookingRepository;
 import com.example.restaurant_be.common.exception.BadRequestException;
 import com.example.restaurant_be.config.midtrans.MidtransProperties;
@@ -35,7 +36,8 @@ class BookingPaymentServiceTest {
                 bookingRepository,
                 paymentBackLogRepository,
                 mock(ObjectMapper.class),
-                midtransProperties());
+                midtransProperties(),
+                mock(AuditLogService.class));
 
         Map<String, Object> payload = basePayload();
         payload.put("signature_key", "bad-signature");
@@ -60,7 +62,8 @@ class BookingPaymentServiceTest {
                 bookingRepository,
                 paymentBackLogRepository,
                 mock(ObjectMapper.class),
-                midtransProperties());
+                midtransProperties(),
+                mock(AuditLogService.class));
 
         Map<String, Object> payload = basePayload();
         payload.put("signature_key", signature(payload));

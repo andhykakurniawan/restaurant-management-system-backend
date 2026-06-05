@@ -8,6 +8,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
+import com.example.restaurant_be.audit.service.AuditLogService;
 import com.example.restaurant_be.common.exception.ConflictException;
 import com.example.restaurant_be.common.exception.NotFoundException;
 import com.example.restaurant_be.order.entity.Order;
@@ -35,6 +36,7 @@ public class PaymentService {
     private final OrderRepository orderRepository;
     private final OrderSessionRepository orderSessionRepository;
     private final UserRepository userRepository;
+    private final AuditLogService auditLogService;
 
     public List<PaymentResponse> findAll() {
         return paymentRepository.findAll()
@@ -93,6 +95,12 @@ public class PaymentService {
         OrderSession session = order.getOrderSession();
         session.setStatus(SessionStatus.PAID);
         orderSessionRepository.save(session);
+
+        auditLogService.log(
+                "PAYMENT_SUCCESS",
+                "Payment",
+                savedPayment.getId(),
+                "order=" + order.getOrderCode() + ", amount=" + savedPayment.getAmount());
 
         return toResponse(savedPayment);
     }

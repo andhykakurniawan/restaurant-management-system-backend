@@ -9,6 +9,7 @@ import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
 
+import com.example.restaurant_be.audit.service.AuditLogService;
 import com.example.restaurant_be.booking.dto.BookingRequest;
 import com.example.restaurant_be.booking.dto.BookingResponse;
 import com.example.restaurant_be.booking.entity.Booking;
@@ -17,6 +18,7 @@ import com.example.restaurant_be.booking.repository.BookingRepository;
 import com.example.restaurant_be.common.exception.ConflictException;
 import com.example.restaurant_be.common.exception.NotFoundException;
 import com.example.restaurant_be.payment.service.MidtransService;
+import com.example.restaurant_be.ordersession.repository.OrderSessionRepository;
 import com.example.restaurant_be.table.entity.AllocationType;
 import com.example.restaurant_be.table.entity.TableRestaurant;
 import com.example.restaurant_be.table.entity.TableStatus;
@@ -31,6 +33,9 @@ public class BookingService {
         private final BookingRepository bookingRepository;
         private final MidtransService midtransService;
         private final TableRepository tableRepository;
+        private final OrderSessionRepository orderSessionRepository;
+        private final AuditLogService auditLogService;
+        private static final int DEFAULT_DURATION_MINUTES = 90;
 
         private BookingResponse toResponse(Booking booking) {
                 return new BookingResponse(
@@ -43,6 +48,7 @@ public class BookingService {
                                 booking.getTable().getTableNumber(),
                                 booking.getBookingDate(),
                                 booking.getBookingTime(),
+                                booking.getDurationMinutes(),
                                 booking.getDpAmount(),
                                 booking.getSnapToken(),
                                 booking.getStatus().name());
@@ -58,9 +64,16 @@ public class BookingService {
         public BookingResponse create(BookingRequest request) {
                 LocalDate bookingDate = LocalDate.parse(request.bookingDate());
                 LocalTime bookingTime = LocalTime.parse(request.bookingTime());
+                int durationMinutes = request.durationMinutes() != null
+                                ? request.durationMinutes()
+                                : DEFAULT_DURATION_MINUTES;
 
                 if (LocalDateTime.of(bookingDate, bookingTime).isBefore(LocalDateTime.now())) {
                         throw new ConflictException("Booking time must be in the future");
+                }
+
+                if (durationMinutes < 15) {
+                        throw new ConflictException("Booking duration must be at least 15 minutes");
                 }
 
                 TableRestaurant table = tableRepository
@@ -82,19 +95,8 @@ public class BookingService {
                         throw new ConflictException("Number of persons exceeds table capacity");
                 }
 
-                boolean hasBookingAtSameTime = bookingRepository
-                                .existsByTable_IdAndBookingDateAndBookingTimeAndStatusIn(
-                                                table.getId(),
-                                                bookingDate,
-                                                bookingTime,
-                                                List.of(
-                                                                BookingStatus.WAITING_PAYMENT,
-                                                                BookingStatus.PENDING,
-                                                                BookingStatus.CONFIRMED,
-                                                                BookingStatus.CHECKED_IN));
-
-                if (hasBookingAtSameTime) {
-                        throw new ConflictException("Table already has a booking at this time");
+                if (hasOverlappingBooking(table.getId(), bookingDate, bookingTime, durationMinutes)) {
+                        throw new ConflictException("Table already has a booking that overlaps this time slot");
                 }
 
                 Booking booking = new Booking();
@@ -104,6 +106,7 @@ public class BookingService {
                 booking.setTable(table);
                 booking.setBookingDate(bookingDate);
                 booking.setBookingTime(bookingTime);
+                booking.setDurationMinutes(durationMinutes);
                 booking.setDpAmount(request.dpAmount());
                 booking.setStatus(BookingStatus.WAITING_PAYMENT);
                 booking.setHasPreorder(false);
@@ -135,6 +138,7 @@ public class BookingService {
                                                 .plusMinutes(15));
 
                 Booking savedBooking = bookingRepository.save(booking);
+                auditLogService.log("BOOKING_CREATED", "Booking", savedBooking.getId(), savedBooking.getBookingCode());
 
                 return toResponse(savedBooking);
         }
@@ -160,9 +164,12 @@ public class BookingService {
                 booking.setCancelledAt(LocalDateTime.now());
 
                 Booking updatedBooking = bookingRepository.save(booking);
+                auditLogService.log("BOOKING_CANCELLED", "Booking", updatedBooking.getId(), updatedBooking.getBookingCode());
 
-                table.setStatus(TableStatus.AVAILABLE);
-                tableRepository.save(table);
+                if (!orderSessionRepository.existsByTableAndIsActiveTrue(table)) {
+                        table.setStatus(TableStatus.AVAILABLE);
+                        tableRepository.save(table);
+                }
 
                 return toResponse(updatedBooking);
         }
@@ -171,5 +178,31 @@ public class BookingService {
                 Booking booking = bookingRepository.findByBookingCode(bookingCode)
                                 .orElseThrow(() -> new NotFoundException("Booking not found"));
                 return toResponse(booking);
+        }
+
+        private boolean hasOverlappingBooking(
+                        UUID tableId,
+                        LocalDate bookingDate,
+                        LocalTime bookingTime,
+                        int durationMinutes) {
+
+                LocalTime requestedStart = bookingTime;
+                LocalTime requestedEnd = bookingTime.plusMinutes(durationMinutes);
+
+                return bookingRepository.findBookingsForCollisionCheck(
+                                tableId,
+                                bookingDate,
+                                List.of(
+                                                BookingStatus.WAITING_PAYMENT,
+                                                BookingStatus.PENDING,
+                                                BookingStatus.CONFIRMED,
+                                                BookingStatus.CHECKED_IN))
+                                .stream()
+                                .anyMatch(existing -> {
+                                        LocalTime existingStart = existing.getBookingTime();
+                                        LocalTime existingEnd = existingStart.plusMinutes(existing.getDurationMinutes());
+                                        return requestedStart.isBefore(existingEnd)
+                                                        && requestedEnd.isAfter(existingStart);
+                                });
         }
 }

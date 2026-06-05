@@ -7,4 +7,5 @@ public enum BookingStatus {
     EXPIRED,
     CHECKED_IN,
     PENDING,
+    NO_SHOW,
 }

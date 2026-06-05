@@ -15,6 +15,7 @@ public record BookingResponse (
     String tableNumber,
     LocalDate bookingDate,
     LocalTime bookingTime,
+    Integer durationMinutes,
     BigDecimal dpAmount,
     String snapToken,
     String status
