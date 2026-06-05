@@ -5,6 +5,7 @@ import java.time.LocalDateTime;
 import java.util.UUID;
 
 import com.example.restaurant_be.order.entity.Order;
+import com.example.restaurant_be.user.entity.User;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -44,6 +45,10 @@ public class Payment {
 
     @Column(nullable = false, precision = 10, scale = 2)
     private BigDecimal amount;
+
+    @JoinColumn(name = "cashier_id")
+    @ManyToOne(fetch = FetchType.LAZY)
+    private User cashier;
 
     private LocalDateTime paidAt = LocalDateTime.now();
 }

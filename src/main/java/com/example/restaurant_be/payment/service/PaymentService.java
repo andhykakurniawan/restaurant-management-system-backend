@@ -4,6 +4,8 @@ import java.math.BigDecimal;
 import java.util.List;
 import java.util.UUID;
 
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import com.example.restaurant_be.common.exception.ConflictException;
@@ -19,6 +21,8 @@ import com.example.restaurant_be.payment.dto.PaymentResponse;
 import com.example.restaurant_be.payment.entity.Payment;
 import com.example.restaurant_be.payment.entity.PaymentStatus;
 import com.example.restaurant_be.payment.repository.PaymentRepository;
+import com.example.restaurant_be.user.entity.User;
+import com.example.restaurant_be.user.repository.UserRepository;
 
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -30,6 +34,7 @@ public class PaymentService {
     private final PaymentRepository paymentRepository;
     private final OrderRepository orderRepository;
     private final OrderSessionRepository orderSessionRepository;
+    private final UserRepository userRepository;
 
     public List<PaymentResponse> findAll() {
         return paymentRepository.findAll()
@@ -56,6 +61,10 @@ public class PaymentService {
             throw new ConflictException("Order sudah dibayar");
         }
 
+        if (paymentRepository.existsByOrder_IdAndStatus(order.getId(), PaymentStatus.SUCCESS)) {
+            throw new ConflictException("Order sudah punya pembayaran sukses");
+        }
+
         if (order.getStatus() == Status.CANCELLED) {
             throw new ConflictException("Order sudah dibatalkan");
         }
@@ -74,6 +83,7 @@ public class PaymentService {
         payment.setAmount(order.getTotalAmount());
         payment.setMethod(request.paymentMethod());
         payment.setStatus(PaymentStatus.SUCCESS);
+        payment.setCashier(getAuthenticatedUserOrNull());
 
         Payment savedPayment = paymentRepository.save(payment);
 
@@ -95,5 +105,18 @@ public class PaymentService {
                 payment.getAmount(),
                 payment.getMethod().name(),
                 payment.getStatus().name());
+    }
+
+    private User getAuthenticatedUserOrNull() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
+        if (authentication == null
+                || authentication.getName() == null
+                || "anonymousUser".equals(authentication.getName())) {
+            return null;
+        }
+
+        return userRepository.findByEmail(authentication.getName())
+                .orElse(null);
     }
 }
