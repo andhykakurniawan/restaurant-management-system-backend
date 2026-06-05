@@ -16,6 +16,7 @@ import com.example.restaurant_be.order.entity.Status;
 import com.example.restaurant_be.order.repository.OrderRepository;
 import com.example.restaurant_be.common.exception.ConflictException;
 import com.example.restaurant_be.common.exception.NotFoundException;
+import com.example.restaurant_be.inventory.service.InventoryService;
 import com.example.restaurant_be.ordersession.entity.OrderSession;
 import com.example.restaurant_be.ordersession.entity.SessionStatus;
 import com.example.restaurant_be.ordersession.repository.OrderSessionRepository;
@@ -30,6 +31,7 @@ public class OrderService {
 
     private final OrderRepository orderRepository;
     private final OrderSessionRepository orderSessionRepository;
+    private final InventoryService inventoryService;
 
     public List<OrderResponse> findAll() {
         return orderRepository.findAll()
@@ -86,6 +88,7 @@ public class OrderService {
         return toResponse(saved);
     }
 
+    @Transactional
     public void delete(UUID id) {
 
         Order order = orderRepository.findById(id)
@@ -95,6 +98,10 @@ public class OrderService {
                 order.getStatus() != Status.CONFIRMED) {
 
             throw new ConflictException("Order cannot be deleted at this stage");
+        }
+
+        if (order.getStatus() == Status.CONFIRMED) {
+            inventoryService.restoreStockForOrder(order);
         }
 
         orderRepository.delete(order);
@@ -162,6 +169,8 @@ public class OrderService {
             throw new ConflictException("Only OPEN orders can be confirmed");
         }
 
+        inventoryService.deductStockForOrder(order);
+
         order.setStatus(Status.CONFIRMED);
 
         Order updatedOrder = orderRepository.save(order);
@@ -178,6 +187,10 @@ public class OrderService {
         if (order.getStatus() != Status.OPEN &&
             order.getStatus() != Status.CONFIRMED) {
             throw new ConflictException("Order cannot be cancelled at this stage");
+        }
+
+        if (order.getStatus() == Status.CONFIRMED) {
+            inventoryService.restoreStockForOrder(order);
         }
 
         order.setStatus(Status.CANCELLED);
