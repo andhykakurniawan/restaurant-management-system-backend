@@ -113,15 +113,20 @@ public class BookingPaymentService {
         else if (transactionStatus.equals("pending")) {
 
             booking.setStatus(BookingStatus.WAITING_PAYMENT);
+        }
 
-            table.setStatus(TableStatus.OCCUPIED);
+        else if (transactionStatus.equals("expire")) {
+
+            booking.setStatus(BookingStatus.EXPIRED);
+
+            table.setStatus(TableStatus.AVAILABLE);
+
+            booking.setCancelledAt(LocalDateTime.now());
         }
 
         else if (transactionStatus.equals("deny")
                 ||
-                transactionStatus.equals("cancel")
-                ||
-                transactionStatus.equals("expire")) {
+                transactionStatus.equals("cancel")) {
 
             booking.setStatus(BookingStatus.CANCELLED);
 
