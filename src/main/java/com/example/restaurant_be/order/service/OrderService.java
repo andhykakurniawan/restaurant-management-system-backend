@@ -210,8 +210,6 @@ public class OrderService {
         Order order = orderRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Order not found"));
 
-        System.out.println("Current status: " + order.getStatus());
-
         if (order.getStatus() != Status.CONFIRMED) {
             throw new ConflictException("Only CONFIRMED orders can be prepared");
         }

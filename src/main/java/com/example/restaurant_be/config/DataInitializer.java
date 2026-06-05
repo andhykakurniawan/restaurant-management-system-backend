@@ -5,12 +5,14 @@ import com.example.restaurant_be.user.entity.User;
 import com.example.restaurant_be.user.repository.UserRepository;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 @Component
 @RequiredArgsConstructor
+@Slf4j
 public class DataInitializer implements CommandLineRunner {
 
     private final UserRepository userRepository;
@@ -32,9 +34,9 @@ public class DataInitializer implements CommandLineRunner {
 
             userRepository.save(user);
 
-            System.out.println("SUPER_ADMIN created.");
+            log.info("SUPER_ADMIN created.");
         } else {
-            System.out.println("SUPER_ADMIN already exists.");
+            log.info("SUPER_ADMIN already exists.");
         }
     }
 }

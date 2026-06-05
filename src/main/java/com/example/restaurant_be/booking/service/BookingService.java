@@ -56,6 +56,12 @@ public class BookingService {
         }
 
         public BookingResponse create(BookingRequest request) {
+                LocalDate bookingDate = LocalDate.parse(request.bookingDate());
+                LocalTime bookingTime = LocalTime.parse(request.bookingTime());
+
+                if (LocalDateTime.of(bookingDate, bookingTime).isBefore(LocalDateTime.now())) {
+                        throw new ConflictException("Booking time must be in the future");
+                }
 
                 TableRestaurant table = tableRepository
                                 .findByIdAndAllocationType(
@@ -72,13 +78,32 @@ public class BookingService {
                         throw new ConflictException("Table is under maintenance");
                 }
 
+                if (request.numberPerson() > table.getCapacity()) {
+                        throw new ConflictException("Number of persons exceeds table capacity");
+                }
+
+                boolean hasBookingAtSameTime = bookingRepository
+                                .existsByTable_IdAndBookingDateAndBookingTimeAndStatusIn(
+                                                table.getId(),
+                                                bookingDate,
+                                                bookingTime,
+                                                List.of(
+                                                                BookingStatus.WAITING_PAYMENT,
+                                                                BookingStatus.PENDING,
+                                                                BookingStatus.CONFIRMED,
+                                                                BookingStatus.CHECKED_IN));
+
+                if (hasBookingAtSameTime) {
+                        throw new ConflictException("Table already has a booking at this time");
+                }
+
                 Booking booking = new Booking();
                 booking.setCustomerName(request.customerName());
                 booking.setCustomerPhone(request.customerPhone());
                 booking.setNumberPerson(request.numberPerson());
                 booking.setTable(table);
-                booking.setBookingDate(LocalDate.parse(request.bookingDate()));
-                booking.setBookingTime(LocalTime.parse(request.bookingTime()));
+                booking.setBookingDate(bookingDate);
+                booking.setBookingTime(bookingTime);
                 booking.setDpAmount(request.dpAmount());
                 booking.setStatus(BookingStatus.WAITING_PAYMENT);
                 booking.setHasPreorder(false);

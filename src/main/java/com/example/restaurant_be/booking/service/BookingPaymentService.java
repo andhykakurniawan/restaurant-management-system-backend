@@ -1,7 +1,11 @@
 package com.example.restaurant_be.booking.service;
 
 import java.math.BigDecimal;
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.time.LocalDateTime;
+import java.util.HexFormat;
 import java.util.Map;
 
 import org.springframework.stereotype.Service;
@@ -9,6 +13,9 @@ import org.springframework.stereotype.Service;
 import com.example.restaurant_be.booking.entity.Booking;
 import com.example.restaurant_be.booking.entity.BookingStatus;
 import com.example.restaurant_be.booking.repository.BookingRepository;
+import com.example.restaurant_be.common.exception.BadRequestException;
+import com.example.restaurant_be.common.exception.NotFoundException;
+import com.example.restaurant_be.config.midtrans.MidtransProperties;
 import com.example.restaurant_be.payment.entity.PaymentBackLog;
 import com.example.restaurant_be.payment.repository.PaymentBackLogRepository;
 import com.example.restaurant_be.table.entity.TableRestaurant;
@@ -16,10 +23,12 @@ import com.example.restaurant_be.table.entity.TableStatus;
 
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import tools.jackson.databind.ObjectMapper;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class BookingPaymentService {
 
     private final BookingRepository bookingRepository;
@@ -27,6 +36,8 @@ public class BookingPaymentService {
     private final PaymentBackLogRepository paymentBackLogRepository;
 
     private final ObjectMapper objectMapper;
+
+    private final MidtransProperties midtransProperties;
 
     @Transactional
     public void handleNotification(
@@ -51,10 +62,19 @@ public class BookingPaymentService {
             String grossAmount = (String) payload.get(
                     "gross_amount");
 
+            validateSignature(payload, orderId, grossAmount);
+
+            if (transactionId != null
+                    && paymentBackLogRepository.existsByTransactionIdAndTransactionStatus(
+                            transactionId,
+                            transactionStatus)) {
+                return;
+            }
+
             Booking booking = bookingRepository
                     .findByMidtransOrderId(
                             orderId)
-                    .orElseThrow(() -> new RuntimeException(
+                    .orElseThrow(() -> new NotFoundException(
                             "Booking not found"));
 
             PaymentBackLog backlog = new PaymentBackLog();
@@ -72,13 +92,49 @@ public class BookingPaymentService {
             TableRestaurant table = booking.getTable();
             handleBookingStatus(booking, transactionStatus, fraudStatus, table);
 
+        } catch (BadRequestException | NotFoundException e) {
+            throw e;
         } catch (Exception e) {
 
-            e.printStackTrace(); 
+            log.error("Failed process Midtrans payment callback", e);
 
             throw new RuntimeException(
                     "Failed process payment callback",
                     e);
+        }
+    }
+
+    private void validateSignature(Map<String, Object> payload, String orderId, String grossAmount) {
+        if (!midtransProperties.isVerifySignature()) {
+            return;
+        }
+
+        String statusCode = (String) payload.get("status_code");
+        String signatureKey = (String) payload.get("signature_key");
+
+        if (orderId == null || statusCode == null || grossAmount == null || signatureKey == null) {
+            throw new BadRequestException("Invalid Midtrans notification payload");
+        }
+
+        String rawSignature = orderId
+                + statusCode
+                + grossAmount
+                + midtransProperties.getServerKey();
+
+        String expectedSignature = sha512(rawSignature);
+
+        if (!expectedSignature.equalsIgnoreCase(signatureKey)) {
+            throw new BadRequestException("Invalid Midtrans signature");
+        }
+    }
+
+    private String sha512(String value) {
+        try {
+            MessageDigest digest = MessageDigest.getInstance("SHA-512");
+            byte[] hash = digest.digest(value.getBytes(StandardCharsets.UTF_8));
+            return HexFormat.of().formatHex(hash);
+        } catch (NoSuchAlgorithmException e) {
+            throw new IllegalStateException("SHA-512 algorithm is not available", e);
         }
     }
 

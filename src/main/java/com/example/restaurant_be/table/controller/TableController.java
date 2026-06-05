@@ -39,7 +39,7 @@ public class TableController {
     }
 
     @PostMapping
-    @PreAuthorize("hasRole('ROLE_SUPER_ADMIN')")
+    @PreAuthorize("hasRole('SUPER_ADMIN')")
     public ResponseEntity<ApiResponse<TableResponse>> create(
             @RequestBody @Valid TableRequest request) {
         return ResponseEntity.ok(
@@ -57,7 +57,7 @@ public class TableController {
     }
 
     @PutMapping("/{id}")
-    // @PreAuthorize("hasRole('ROLE_SUPER_ADMIN')")
+    // @PreAuthorize("hasRole('SUPER_ADMIN')")
     public ResponseEntity<ApiResponse<TableResponse>> update(
             @PathVariable UUID id,
             @RequestBody @Valid TableRequest request) {
@@ -68,14 +68,14 @@ public class TableController {
     }
 
     @DeleteMapping("/{id}")
-    // @PreAuthorize("hasRole('ROLE_SUPER_ADMIN')")
+    // @PreAuthorize("hasRole('SUPER_ADMIN')")
     public ResponseEntity<ApiResponse<Void>> deleteById(@PathVariable UUID id) {
         tableService.deleteById(id);
         return ResponseEntity.ok(ApiResponse.success("Table deleted successfully", null));
     }
 
     @PatchMapping("/{id}/restore")
-    // @PreAuthorize("hasRole('ROLE_SUPER_ADMIN')")
+    // @PreAuthorize("hasRole('SUPER_ADMIN')")
     public ResponseEntity<ApiResponse<TableResponse>> restore(@PathVariable UUID id) {
 
         TableResponse response = tableService.restore(id);

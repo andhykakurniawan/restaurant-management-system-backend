@@ -13,9 +13,11 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @Component
 @RequiredArgsConstructor
+@Slf4j
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final JwtService jwtService;
@@ -28,8 +30,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             FilterChain filterChain) throws ServletException, IOException {
 
         String authHeader = request.getHeader("Authorization");
-
-        System.out.println("Auth Header: " + authHeader);
 
         if (authHeader != null && authHeader.startsWith("Bearer ")) {
 
@@ -49,10 +49,10 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
                 SecurityContextHolder.getContext().setAuthentication(authentication);
 
-                System.out.println("Authentication SET: " + authentication);
+                log.debug("Authentication set for {}", email);
 
             } catch (Exception e) {
-                System.out.println("TOKEN INVALID!");
+                log.debug("Invalid JWT token", e);
             }
         }
 

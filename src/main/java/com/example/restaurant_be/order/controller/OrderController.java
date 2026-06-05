@@ -53,37 +53,37 @@ public class OrderController {
     }
 
     @PatchMapping("/{id}/confirm")
-    @PreAuthorize("hasRole('ROLE_SUPER_ADMIN') or hasRole('ROLE_WAITER')")
+    @PreAuthorize("hasRole('SUPER_ADMIN') or hasRole('WAITER')")
     public ResponseEntity<OrderResponse> confirm(@PathVariable UUID id) {
         return ResponseEntity.ok(orderService.confirmOrder(id));
     }
 
     @PatchMapping("/{id}/cancel")
-    @PreAuthorize("hasRole('ROLE_SUPER_ADMIN') or hasRole('ROLE_WAITER')")
+    @PreAuthorize("hasRole('SUPER_ADMIN') or hasRole('WAITER')")
     public ResponseEntity<OrderResponse> cancel(@PathVariable UUID id) {
         return ResponseEntity.ok(orderService.cancelOrder(id));
     }
 
     @PatchMapping("/{id}/complete")
-    @PreAuthorize("hasRole('ROLE_SUPER_ADMIN') or hasRole('ROLE_WAITER')")
+    @PreAuthorize("hasRole('SUPER_ADMIN') or hasRole('WAITER')")
     public ResponseEntity<OrderResponse> complete(@PathVariable UUID id) {
         return ResponseEntity.ok(orderService.completeOrder(id));
     }
 
     @PatchMapping("/{id}/preparing")
-    @PreAuthorize("hasRole('ROLE_SUPER_ADMIN') or hasRole('ROLE_CHEF')")
+    @PreAuthorize("hasRole('SUPER_ADMIN') or hasRole('CHEF')")
     public ResponseEntity<OrderResponse> prepare(@PathVariable UUID id) {
         return ResponseEntity.ok(orderService.preparingOrder(id));
     }
 
     @PatchMapping("/{id}/ready")
-    @PreAuthorize("hasRole('ROLE_SUPER_ADMIN') or hasRole('ROLE_CHEF')")
+    @PreAuthorize("hasRole('SUPER_ADMIN') or hasRole('CHEF')")
     public ResponseEntity<OrderResponse> ready(@PathVariable UUID id) {
         return ResponseEntity.ok(orderService.readyOrder(id));
     }
 
     @PatchMapping("/{id}/served")
-    @PreAuthorize("hasRole('ROLE_SUPER_ADMIN') or hasRole('ROLE_WAITER')")
+    @PreAuthorize("hasRole('SUPER_ADMIN') or hasRole('WAITER')")
     public ResponseEntity<OrderResponse> served(@PathVariable UUID id) {
         return ResponseEntity.ok(orderService.servedOrder(id));
     }

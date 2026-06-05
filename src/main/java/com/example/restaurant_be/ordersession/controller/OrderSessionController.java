@@ -37,7 +37,7 @@ public class OrderSessionController {
     }
 
     @PostMapping
-    @PreAuthorize("hasRole('ROLE_SUPER_ADMIN') or hasRole('ROLE_WAITER')")
+    @PreAuthorize("hasRole('SUPER_ADMIN') or hasRole('WAITER')")
     public ResponseEntity<ApiResponse<OrderSessionResponse>> createSession(
             @Valid @RequestBody OrderSessionRequest request) {
 
@@ -50,7 +50,7 @@ public class OrderSessionController {
     }
 
     @PostMapping("/walk-in")
-    @PreAuthorize("hasRole('ROLE_SUPER_ADMIN') or hasRole('ROLE_WAITER')")
+    @PreAuthorize("hasRole('SUPER_ADMIN') or hasRole('WAITER')")
     public ResponseEntity<ApiResponse<OrderSessionResponse>> createWalkInSession(
             @Valid @RequestBody OrderSessionRequest request) {
 
@@ -63,7 +63,7 @@ public class OrderSessionController {
     }
 
     @PostMapping("/check-in-booking")
-    @PreAuthorize("hasRole('ROLE_SUPER_ADMIN') or hasRole('ROLE_WAITER')")
+    @PreAuthorize("hasRole('SUPER_ADMIN') or hasRole('WAITER')")
     public ResponseEntity<ApiResponse<OrderSessionResponse>> checkInBooking(
             @Valid @RequestBody OrderSessionRequest request) {
 
@@ -76,7 +76,7 @@ public class OrderSessionController {
     }
 
     @PatchMapping("/{id}/close")
-    @PreAuthorize("hasRole('ROLE_SUPER_ADMIN') or hasRole('ROLE_WAITER')")
+    @PreAuthorize("hasRole('SUPER_ADMIN') or hasRole('WAITER')")
     public ResponseEntity<ApiResponse<UUID>> closeSession(@PathVariable("id") UUID id) {
         orderSessionService.closeSession(id);
 

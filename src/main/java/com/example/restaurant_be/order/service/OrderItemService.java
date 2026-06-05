@@ -19,6 +19,7 @@ import com.example.restaurant_be.order.entity.Status;
 import com.example.restaurant_be.order.repository.OrderItemRepository;
 import com.example.restaurant_be.order.repository.OrderRepository;
 
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 
 @Service
@@ -46,6 +47,7 @@ public class OrderItemService {
                 }
         }
 
+        @Transactional
         public OrderItemResponse create(UUID orderId, OrderItemRequest request) {
 
                 Order order = orderRepository.findById(orderId)
@@ -108,6 +110,7 @@ public class OrderItemService {
                 orderRepository.save(order);
         }
 
+        @Transactional
         public OrderItemResponse update(UUID orderId, UUID itemId, OrderItemRequest request) {
 
                 OrderItem item = orderItemRepository.findById(itemId)
@@ -137,6 +140,7 @@ public class OrderItemService {
                 return toResponse(saved);
         }
 
+        @Transactional
         public void delete(UUID orderId, UUID itemId) {
 
                 OrderItem item = orderItemRepository.findById(itemId)

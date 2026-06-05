@@ -31,8 +31,7 @@ public class OrderSessionScheduler {
                                 .findByExpiredAtBeforeAndStatusIn(
                                                 LocalDateTime.now(),
                                                 List.of(
-                                                                SessionStatus.WAITING_ORDER,
-                                                                SessionStatus.ACTIVE));
+                                                                SessionStatus.WAITING_ORDER));
 
                 for (OrderSession session : sessions) {
 

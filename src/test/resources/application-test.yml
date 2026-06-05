@@ -1,0 +1,28 @@
+spring:
+  datasource:
+    url: jdbc:h2:mem:restaurant_test;MODE=PostgreSQL;DATABASE_TO_LOWER=TRUE;DB_CLOSE_DELAY=-1
+    username: sa
+    password:
+    driver-class-name: org.h2.Driver
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    show-sql: false
+    open-in-view: false
+
+jwt:
+  secret: testSecretKeyForJwtThatIsLongEnoughForHs256Only
+  expiration: 3600000
+
+midtrans:
+  server-key: test-server-key
+  client-key: test-client-key
+  snap-url: http://localhost/midtrans/snap
+  verify-signature: true
+
+app:
+  frontend-url: http://localhost:5173
+  cors:
+    allowed-origins: http://localhost:5173
+  security:
+    relaxed-permit-all: true

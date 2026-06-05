@@ -1,0 +1,12 @@
+spring:
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: false
+
+midtrans:
+  verify-signature: true
+
+app:
+  security:
+    relaxed-permit-all: false

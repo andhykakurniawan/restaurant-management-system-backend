@@ -15,4 +15,6 @@ public class MidtransProperties {
     private String clientKey;
 
     private String snapUrl;
+
+    private boolean verifySignature;
 }
