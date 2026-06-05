@@ -55,7 +55,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/reports/**").permitAll()
                         .requestMatchers("/api/shifts/**").permitAll()
                         .requestMatchers("/api/attendances/**").permitAll()
-                        .requestMatchers("/api/table-restaurants/**").authenticated()
+                        .requestMatchers("/api/table-restaurants/**").permitAll()
                         .requestMatchers("/api/order-sessions/**").authenticated()
                         .requestMatchers("/api/bookings/**").permitAll()
                         // .requestMatchers("/api/admin/**").hasAuthority("ROLE_SUPER_ADMIN")

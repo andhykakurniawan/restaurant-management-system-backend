@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -51,6 +52,16 @@ public class UserController {
                 ApiResponse.success(
                         "User retrieved successfully",
                         userService.findById(id)));
+    }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<ApiResponse<UserResponse>> update(
+            @PathVariable UUID id,
+            @RequestBody @Valid UserRequest request) {
+        return ResponseEntity.ok(
+                ApiResponse.success(
+                        "User updated successfully",
+                        userService.update(id, request)));
     }
 
     @DeleteMapping("/{id}")

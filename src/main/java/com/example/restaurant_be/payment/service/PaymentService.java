@@ -6,15 +6,21 @@ import java.util.UUID;
 
 import org.springframework.stereotype.Service;
 
+import com.example.restaurant_be.common.exception.ConflictException;
+import com.example.restaurant_be.common.exception.NotFoundException;
 import com.example.restaurant_be.order.entity.Order;
 import com.example.restaurant_be.order.entity.Status;
 import com.example.restaurant_be.order.repository.OrderRepository;
+import com.example.restaurant_be.ordersession.entity.OrderSession;
+import com.example.restaurant_be.ordersession.entity.SessionStatus;
+import com.example.restaurant_be.ordersession.repository.OrderSessionRepository;
 import com.example.restaurant_be.payment.dto.PaymentRequest;
 import com.example.restaurant_be.payment.dto.PaymentResponse;
 import com.example.restaurant_be.payment.entity.Payment;
 import com.example.restaurant_be.payment.entity.PaymentStatus;
 import com.example.restaurant_be.payment.repository.PaymentRepository;
 
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 
 @Service
@@ -23,6 +29,7 @@ public class PaymentService {
 
     private final PaymentRepository paymentRepository;
     private final OrderRepository orderRepository;
+    private final OrderSessionRepository orderSessionRepository;
 
     public List<PaymentResponse> findAll() {
         return paymentRepository.findAll()
@@ -34,30 +41,31 @@ public class PaymentService {
     public PaymentResponse findById(UUID id) {
 
         Payment payment = paymentRepository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("Payment not found"));
+                .orElseThrow(() -> new NotFoundException("Payment not found"));
 
         return toResponse(payment);
     }
 
+    @Transactional
     public PaymentResponse create(PaymentRequest request) {
 
         Order order = orderRepository.findByIdIncludingInactive(request.orderId())
-                .orElseThrow(() -> new IllegalArgumentException("Order not found"));
+                .orElseThrow(() -> new NotFoundException("Order not found"));
 
         if (order.getStatus() == Status.COMPLETED) {
-            throw new IllegalStateException("Order sudah dibayar");
+            throw new ConflictException("Order sudah dibayar");
         }
 
         if (order.getStatus() == Status.CANCELLED) {
-            throw new IllegalStateException("Order sudah dibatalkan");
+            throw new ConflictException("Order sudah dibatalkan");
         }
 
         if (order.getTotalAmount().compareTo(BigDecimal.ZERO) <= 0) {
-            throw new IllegalStateException("Total order tidak valid");
+            throw new ConflictException("Total order tidak valid");
         }
 
         if (order.getStatus() != Status.SERVED) {
-            throw new IllegalStateException("Order belum siap dibayar");
+            throw new ConflictException("Order belum siap dibayar");
         }
 
         Payment payment = new Payment();
@@ -71,6 +79,10 @@ public class PaymentService {
 
         order.setStatus(Status.COMPLETED);
         orderRepository.save(order);
+
+        OrderSession session = order.getOrderSession();
+        session.setStatus(SessionStatus.PAID);
+        orderSessionRepository.save(session);
 
         return toResponse(savedPayment);
     }

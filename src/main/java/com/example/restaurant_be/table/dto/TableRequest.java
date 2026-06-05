@@ -5,20 +5,23 @@ import com.example.restaurant_be.table.entity.TableStatus;
 import com.example.restaurant_be.table.entity.TableArea;
 
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Positive;
 
 public record TableRequest(
         @NotBlank 
         String tableNumber,
 
-        @NotBlank 
+        @NotNull
+        @Positive
         Integer capacity,
 
-        @NotBlank 
+        @NotNull
         AllocationType allocationType,
 
-        @NotBlank 
+        @NotNull
         TableStatus status,
 
-        @NotBlank
+        @NotNull
         TableArea area
     ) {}

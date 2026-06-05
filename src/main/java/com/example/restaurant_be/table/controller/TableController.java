@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -19,6 +20,7 @@ import com.example.restaurant_be.table.dto.TableRequest;
 import com.example.restaurant_be.table.dto.TableResponse;
 import com.example.restaurant_be.table.service.TableService;
 
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
 @RestController
@@ -39,7 +41,7 @@ public class TableController {
     @PostMapping
     @PreAuthorize("hasRole('ROLE_SUPER_ADMIN')")
     public ResponseEntity<ApiResponse<TableResponse>> create(
-            @RequestBody TableRequest request) {
+            @RequestBody @Valid TableRequest request) {
         return ResponseEntity.ok(
                 ApiResponse.success(
                         "Table created successfully",
@@ -51,18 +53,29 @@ public class TableController {
         return ResponseEntity.ok(
                 ApiResponse.success(
                         "Table retrieved successfully",
-                        tableService.findById(id)));
+                tableService.findById(id)));
+    }
+
+    @PutMapping("/{id}")
+    // @PreAuthorize("hasRole('ROLE_SUPER_ADMIN')")
+    public ResponseEntity<ApiResponse<TableResponse>> update(
+            @PathVariable UUID id,
+            @RequestBody @Valid TableRequest request) {
+        return ResponseEntity.ok(
+                ApiResponse.success(
+                        "Table updated successfully",
+                        tableService.update(id, request)));
     }
 
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasRole('ROLE_SUPER_ADMIN')")
+    // @PreAuthorize("hasRole('ROLE_SUPER_ADMIN')")
     public ResponseEntity<ApiResponse<Void>> deleteById(@PathVariable UUID id) {
         tableService.deleteById(id);
         return ResponseEntity.ok(ApiResponse.success("Table deleted successfully", null));
     }
 
     @PatchMapping("/{id}/restore")
-    @PreAuthorize("hasRole('ROLE_SUPER_ADMIN')")
+    // @PreAuthorize("hasRole('ROLE_SUPER_ADMIN')")
     public ResponseEntity<ApiResponse<TableResponse>> restore(@PathVariable UUID id) {
 
         TableResponse response = tableService.restore(id);

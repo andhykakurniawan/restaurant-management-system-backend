@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -15,6 +16,7 @@ import com.example.restaurant_be.common.response.ApiResponse;
 import com.example.restaurant_be.shift.dto.ShiftRequest;
 import com.example.restaurant_be.shift.dto.ShiftResponse;
 import com.example.restaurant_be.shift.service.ShiftService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
 @RestController
@@ -33,7 +35,7 @@ public class ShiftController {
 
     @PostMapping
     public ResponseEntity<ApiResponse<ShiftResponse>> create(
-            @RequestBody ShiftRequest request) {
+            @RequestBody @Valid ShiftRequest request) {
         return ResponseEntity.ok(
                 ApiResponse.success(
                         "Shift created successfully",
@@ -46,6 +48,16 @@ public class ShiftController {
                 ApiResponse.success(
                         "Menu retrieved successfully",
                         shiftService.findById(id)));
+    }
+
+    @PutMapping("/{id}")
+    public ResponseEntity<ApiResponse<ShiftResponse>> update(
+            @PathVariable UUID id,
+            @RequestBody @Valid ShiftRequest request) {
+        return ResponseEntity.ok(
+                ApiResponse.success(
+                        "Shift updated successfully",
+                        shiftService.update(id, request)));
     }
 
     @DeleteMapping("/{id}")

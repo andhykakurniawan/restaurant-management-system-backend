@@ -9,6 +9,7 @@ import com.example.restaurant_be.payment.dto.PaymentRequest;
 import com.example.restaurant_be.payment.dto.PaymentResponse;
 import com.example.restaurant_be.payment.service.PaymentService;
 
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
 @RestController
@@ -29,7 +30,7 @@ public class PaymentController {
     }
 
     @PostMapping
-    public PaymentResponse create(@RequestBody PaymentRequest request) {
+    public PaymentResponse create(@Valid @RequestBody PaymentRequest request) {
         return paymentService.create(request);
     }
 }
