@@ -20,10 +20,10 @@ public class AuthService {
     public String login(String email, String password) {
 
         User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new UnauthorizedException("Invalid credentials"));
+                .orElseThrow(() -> new UnauthorizedException("Email not found"));
 
         if (!passwordEncoder.matches(password, user.getPassword())) {
-            throw new UnauthorizedException("Invalid credentials");
+            throw new UnauthorizedException("Invalid password");
         }
 
         return jwtService.generateToken(user.getEmail(), user.getRole().name());
