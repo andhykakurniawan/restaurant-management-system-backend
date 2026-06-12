@@ -9,6 +9,8 @@ public record MenuCategoryResponse(
         String menuName,
         UUID categoryId,
         String categoryName,
-        BigDecimal price,
+        BigDecimal basePrice,
+        BigDecimal sellingPrice,
+        BigDecimal discountPercentage,
         boolean is_active) {
 }

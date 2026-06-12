@@ -1,15 +1,17 @@
 package com.example.restaurant_be.menucategory.service;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
-import org.springframework.stereotype.Service;
 
-import com.example.restaurant_be.common.exception.NotFoundException;
+import org.springframework.stereotype.Service;
 
 import com.example.restaurant_be.category.entity.Category;
 import com.example.restaurant_be.category.repository.CategoryRepository;
+import com.example.restaurant_be.common.exception.BadRequestException;
+import com.example.restaurant_be.common.exception.NotFoundException;
 import com.example.restaurant_be.menu.entity.Menu;
 import com.example.restaurant_be.menu.repository.MenuRepository;
 import com.example.restaurant_be.menucategory.dto.MenuCategoryRequest;
@@ -34,13 +36,29 @@ public class MenuCategoryService {
     }
 
     private MenuCategoryResponse toResponse(MenuCategory menuCategory) {
+        BigDecimal basePrice = menuCategory.getMenu().getPrice();
+        BigDecimal sellingPrice = menuCategory.getPrice();
+
+        BigDecimal discountPercentage = BigDecimal.ZERO;
+
+        if (basePrice.compareTo(BigDecimal.ZERO) > 0) {
+            discountPercentage = basePrice.subtract(sellingPrice)
+                    .multiply(BigDecimal.valueOf(100))
+                    .divide(
+                            basePrice,
+                            2,
+                            RoundingMode.HALF_UP);
+        }
+
         return new MenuCategoryResponse(
                 menuCategory.getId(),
                 menuCategory.getMenu().getId(),
                 menuCategory.getMenu().getName(),
                 menuCategory.getCategory().getId(),
                 menuCategory.getCategory().getName(),
-                menuCategory.getPrice(),
+                basePrice,
+                sellingPrice,
+                discountPercentage,
                 menuCategory.getIsActive());
     }
 
@@ -51,6 +69,11 @@ public class MenuCategoryService {
 
         Category category = categoryRepository.findById(request.categoryId())
                 .orElseThrow(() -> new NotFoundException("Category not found"));
+
+        if (request.price().compareTo(menu.getPrice()) > 0) {
+            throw new BadRequestException(
+                    "Selling price cannot exceed base price");
+        }
 
         MenuCategory menuCategory = new MenuCategory();
         menuCategory.setMenu(menu);
@@ -89,7 +112,17 @@ public class MenuCategoryService {
                 .orElseThrow(() -> new NotFoundException("Data not found"));
 
         if (updates.containsKey("price")) {
-            BigDecimal price = new BigDecimal(updates.get("price").toString());
+
+            BigDecimal price = new BigDecimal(
+                    updates.get("price").toString());
+
+            BigDecimal basePrice = entity.getMenu().getPrice();
+
+            if (price.compareTo(basePrice) > 0) {
+                throw new BadRequestException(
+                        "Selling price cannot exceed base price");
+            }
+
             entity.setPrice(price);
         }
 
@@ -103,6 +136,11 @@ public class MenuCategoryService {
 
         Menu menu = menuRepository.findById(request.menuId())
                 .orElseThrow(() -> new NotFoundException("Menu not found"));
+
+        if (request.price().compareTo(menu.getPrice()) > 0) {
+            throw new BadRequestException(
+                    "Selling price cannot exceed base price");
+        }
 
         Category category = categoryRepository.findById(request.categoryId())
                 .orElseThrow(() -> new NotFoundException("Category not found"));
@@ -133,4 +171,3 @@ public class MenuCategoryService {
         return toResponse(restored);
     }
 }
-
