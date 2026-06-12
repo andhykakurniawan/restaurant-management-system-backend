@@ -21,11 +21,14 @@ public class AuthController {
     private final AuthService authService;
 
     @PostMapping("/login")
-    public LoginResponse login(@RequestBody LoginRequest request) {
+    public ResponseEntity<ApiResponse<LoginResponse>> login(@RequestBody LoginRequest request) {
 
         String token = authService.login(request.getEmail(), request.getPassword());
 
-        return new LoginResponse(token);
+        return ResponseEntity.ok(
+                ApiResponse.success(
+                        "Login successfully",
+                        new LoginResponse(token)));
     }
 
     @GetMapping("/me")
